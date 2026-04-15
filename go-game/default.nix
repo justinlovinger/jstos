@@ -5,7 +5,9 @@
   ...
 }:
 let
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.goGame) config.jstos);
+  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
+    lib.mapAttrs (_: cfg: cfg.goGame) config.jstos.users
+  );
 
   katagoSettingsFormat = {
     generate =
@@ -28,7 +30,7 @@ let
   };
 in
 {
-  options.jstos = lib.mkOption {
+  options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
         { config, ... }:

@@ -6,13 +6,13 @@
 }:
 let
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.windowManager) config.jstos
+    lib.mapAttrs (_: cfg: cfg.windowManager) config.jstos.users
   );
 
-  jstos = config.jstos;
+  jstosUsers = config.jstos.users;
 in
 {
-  options.jstos = lib.mkOption {
+  options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
         { name, config, ... }:
@@ -443,7 +443,7 @@ in
                         // tagBindings
                         // (
                           let
-                            shellCfg = jstos.${user}.shell;
+                            shellCfg = jstosUsers.${user}.shell;
                           in
                           if (shellCfg.enable && shellCfg.remote.client.enable) then
                             {

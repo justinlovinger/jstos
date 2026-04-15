@@ -5,7 +5,7 @@
   ...
 }:
 let
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.llm) config.jstos);
+  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.llm) config.jstos.users);
 
   modelsOption = lib.mkOption {
     type = lib.types.attrsOf (
@@ -32,7 +32,7 @@ let
   settingsFormat = pkgs.formats.yaml { };
 in
 {
-  options.jstos = lib.mkOption {
+  options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
         { config, ... }:

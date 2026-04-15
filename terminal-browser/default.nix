@@ -5,11 +5,11 @@
 }:
 let
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.terminalBrowser) config.jstos
+    lib.mapAttrs (_: cfg: cfg.terminalBrowser) config.jstos.users
   );
 in
 {
-  options.jstos = lib.mkOption {
+  options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
         { ... }:

@@ -4,30 +4,21 @@
   ...
 }:
 let
-  userCfgs = lib.mapAttrs (_: cfg: cfg.system) config.jstos;
+  cfg = config.jstos.system;
 in
 {
-  options.jstos = lib.mkOption {
-    type = lib.types.attrsOf (
-      lib.types.submodule (
-        { ... }:
-        {
-          options.system = {
-            compressMemory = {
-              enable = lib.mkEnableOption "compress memory";
+  options.jstos.system = {
+    compressMemory = {
+      enable = lib.mkEnableOption "compress memory";
 
-              memoryPercent = lib.mkOption {
-                type = lib.types.ints.positive;
-                default = 66;
-                description = ''
-                  Maximum amount of memory to use for compression.
-                '';
-              };
-            };
-          };
-        }
-      )
-    );
+      memoryPercent = lib.mkOption {
+        type = lib.types.ints.positive;
+        default = 66;
+        description = ''
+          Maximum amount of memory to use for compression.
+        '';
+      };
+    };
   };
 
   config = lib.mkMerge [
@@ -36,16 +27,8 @@ in
         # When the kernel supports backing-store-less zswap,
         # we won't need zram at all.
         useZram = config.swapDevices == [ ];
-
-        memoryPercent = lib.foldl' lib.trivial.max 0 (
-          builtins.map (cfg: cfg.memoryPercent) (lib.attrValues userCfgs_)
-        );
-
-        userCfgs_ = lib.filterAttrs (_: cfg: cfg.enable) (
-          lib.mapAttrs (_: cfg: cfg.compressMemory) userCfgs
-        );
       in
-      lib.mkIf (lib.any (cfg: cfg.enable) (lib.attrValues userCfgs_)) (
+      lib.mkIf cfg.compressMemory.enable (
         lib.mkMerge [
           (lib.mkIf useZram {
             zramSwap = {
@@ -56,7 +39,7 @@ in
               # in practice,
               # zram compresses at about a 3:1 ratio,
               # so we multiply the percent of memory to compress by 3.
-              memoryPercent = memoryPercent * 3;
+              memoryPercent = cfg.compressMemory.memoryPercent * 3;
             };
           })
           (lib.mkIf (!useZram) {
@@ -69,7 +52,7 @@ in
               "zswap.enabled=1"
               "zswap.compressor=zstd"
               "zswap.zpool=zsmalloc"
-              "zswap.max_pool_percent=${toString memoryPercent}"
+              "zswap.max_pool_percent=${toString cfg.compressMemory.memoryPercent}"
               "zswap.accept_threshold_percent=90"
               "zswap.shrinker_enabled=1"
             ];
@@ -87,7 +70,7 @@ in
               enabled = true;
               compressor = "zstd";
               zpool = "zsmalloc";
-              max_pool_percent = memoryPercent;
+              max_pool_percent = cfg.compressMemory.memoryPercent;
               accept_threshold_percent = 90;
               shrinker_enabled = true;
             };

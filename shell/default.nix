@@ -26,10 +26,12 @@ let
 
   scrollbackConfigPath = "helix/scrollback-config.toml";
 
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.shell) config.jstos);
+  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
+    lib.mapAttrs (_: cfg: cfg.shell) config.jstos.users
+  );
 in
 {
-  options.jstos = lib.mkOption {
+  options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
         { ... }:

@@ -48,7 +48,7 @@
         {
           imports = [ ./module.nix ];
 
-          options.jstos = lib.mkOption {
+          options.jstos.users = lib.mkOption {
             type = lib.types.attrsOf (
               lib.types.submodule (
                 { ... }:

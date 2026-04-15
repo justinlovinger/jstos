@@ -8,11 +8,11 @@ let
   syncCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.sync) userCfgs);
   snapshotCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.snapshot) userCfgs);
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.filesystems.data) config.jstos
+    lib.mapAttrs (_: cfg: cfg.filesystems.data) config.jstos.users
   );
 in
 {
-  options.jstos = lib.mkOption {
+  options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
         { name, ... }:

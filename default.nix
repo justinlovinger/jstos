@@ -12,7 +12,7 @@
     ./go-game
   ];
 
-  options.jstos = lib.mkOption {
+  options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (lib.types.submodule ({ ... }: { }));
     default = { };
     example = {
