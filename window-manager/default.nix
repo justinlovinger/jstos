@@ -443,11 +443,11 @@ in
                         // tagBindings
                         // (
                           let
-                            shellCfg = jstosUsers.${user}.shell;
+                            remoteCfg = jstosUsers.${user}.shell.remote;
                           in
-                          if (shellCfg.enable && shellCfg.remote.client.enable) then
+                          if remoteCfg.client.enable then
                             {
-                              "Super+Control+Shift return" = "spawn 'mosh-window ${shellCfg.remote.address}'";
+                              "Super+Control+Shift return" = "spawn 'mosh-window ${remoteCfg.address}'";
                             }
                           else
                             { }
