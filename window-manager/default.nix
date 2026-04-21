@@ -8,8 +8,7 @@ let
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
     lib.mapAttrs (_: cfg: cfg.windowManager) config.jstos.users
   );
-
-  jstosUsers = config.jstos.users;
+  config' = config;
 in
 {
   options.jstos.users = lib.mkOption {
@@ -19,6 +18,52 @@ in
         {
           options.windowManager = {
             enable = lib.mkEnableOption "Window Manager";
+
+            bindings = lib.mkOption {
+              type = lib.types.attrsOf (
+                lib.types.submodule (
+                  { config, ... }:
+                  {
+                    options =
+                      let
+                        modeOptions = enableDefault: defaultToNormal: {
+                          enable = lib.mkOption {
+                            type = lib.types.bool;
+                            default = enableDefault;
+                            description = ''
+                              Whether the binding is enabled in this mode.
+                            '';
+                          };
+                          command = lib.mkOption {
+                            type = lib.types.nullOr lib.types.str;
+                            default = if defaultToNormal then config.normal.command else null;
+                            example = "spawn alacritty";
+                            description = ''
+                              `riverctl` command to run when binding is pressed in this mode.
+                            '';
+                          };
+                          repeat = lib.mkOption {
+                            type = lib.types.bool;
+                            default = if defaultToNormal then config.normal.repeat else false;
+                            description = ''
+                              Whether to repeat the command when binding is held in this mode.
+                            '';
+                          };
+                        };
+                      in
+                      {
+                        normal = modeOptions true false;
+                        mouse = modeOptions true true;
+                        locked = modeOptions false true;
+                      };
+                  }
+                )
+              );
+              description = ''
+                Mapping of key bindings to commands.
+                Keys should be in the form of River bindings.
+              '';
+            };
 
             swapCapsEsc = lib.mkOption {
               type = lib.types.bool;
@@ -256,6 +301,315 @@ in
               };
             };
           };
+
+          config.windowManager = {
+            bindings =
+              let
+                normalBindings =
+                  (
+                    let
+                      remoteCfg = config.shell.remote;
+                    in
+                    if remoteCfg.client.enable then
+                      {
+                        "Super+Control+Shift return".normal.command = "spawn 'mosh-window ${remoteCfg.address}'";
+                      }
+                    else
+                      { }
+                  )
+                  // {
+                    "Super+Shift return".normal.command = ''
+                      spawn 'shell-window --working-directory="${homeManagerConfig.home.homeDirectory}"'
+                    '';
+                    "Super o".normal.command = "spawn '${lib.getExe pkgs.rofi} -modi drun -show drun ${rofiArgs}'";
+                    "Super+Control c".normal.command = "close";
+
+                    "Super return".normal.command = "zoom";
+                    "Super j".normal.command = "focus-view next";
+                    "Super k".normal.command = "focus-view previous";
+                    "Super+Shift j".normal.command = "swap next";
+                    "Super+Shift k".normal.command = "swap previous";
+
+                    "Super b".normal.command = "focus-output previous";
+                    "Super n".normal.command = "focus-output next";
+                    "Super+Shift b".normal.command = "send-to-output previous";
+                    "Super+Shift n".normal.command = "send-to-output next";
+
+                    # `flow` does not currently support moving tags.
+                    "Super y".normal.command =
+                      "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32 --occupied'";
+                    "Super u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32 --occupied'";
+                    "Super+Control y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32'";
+                    "Super+Control u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32'";
+                    # "Super+Shift y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move previous 32'";
+                    # "Super+Shift u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move next 32'";
+
+                    "Super bracketleft".normal.command = "focus-previous-tags";
+                    "Super bracketright".normal.command = "focus-previous-tags";
+                    "Super+Shift bracketleft".normal.command = "send-to-previous-tags";
+                    "Super+Shift bracketright".normal.command = "send-to-previous-tags";
+                  }
+                  // (builtins.mapAttrs
+                    (_: value: {
+                      normal = {
+                        command = value.normal.command;
+                        repeat = true;
+                      };
+                    })
+                    {
+                      "Super+Alt h".normal.command = "move left 10";
+                      "Super+Alt j".normal.command = "move down 10";
+                      "Super+Alt k".normal.command = "move up 10";
+                      "Super+Alt l".normal.command = "move right 10";
+
+                      "Super+Alt+Control h".normal.command = "move left 1";
+                      "Super+Alt+Control j".normal.command = "move down 1";
+                      "Super+Alt+Control k".normal.command = "move up 1";
+                      "Super+Alt+Control l".normal.command = "move right 1";
+
+                      "Super+Alt+Shift h".normal.command = "resize horizontal -10";
+                      "Super+Alt+Shift j".normal.command = "resize vertical 10";
+                      "Super+Alt+Shift k".normal.command = "resize vertical -10";
+                      "Super+Alt+Shift l".normal.command = "resize horizontal 10";
+
+                      "Super+Alt+Shift+Control h".normal.command = "resize horizontal -1";
+                      "Super+Alt+Shift+Control j".normal.command = "resize vertical 1";
+                      "Super+Alt+Shift+Control k".normal.command = "resize vertical -1";
+                      "Super+Alt+Shift+Control l".normal.command = "resize horizontal 1";
+                    }
+                  )
+                  // {
+                    "Super+Alt left".normal.command = "snap left";
+                    "Super+Alt down".normal.command = "snap down";
+                    "Super+Alt up".normal.command = "snap up";
+                    "Super+Alt right".normal.command = "snap right";
+
+                    "Super h".normal.command = ''send-layout-cmd kile "mod-main-ratio -0.05"'';
+                    "Super l".normal.command = ''send-layout-cmd kile "mod-main-ratio +0.05"'';
+                    "Super+Shift h".normal.command = ''send-layout-cmd kile "mod-main-count +1"'';
+                    "Super+Shift l".normal.command = ''send-layout-cmd kile "mod-main-count -1"'';
+                    "Super+Control h".normal.command = ''send-layout-cmd kile "mod-main-index +1"'';
+                    "Super+Control l".normal.command = ''send-layout-cmd kile "mod-main-index -1"'';
+                    "Super semicolon".normal.command = "spawn ${layoutMenuScript}";
+
+                    "Super f".normal.command = "toggle-fullscreen";
+                    "Super space".normal.command = "toggle-float";
+
+                    "Super i".normal.command = rofimojiSpawn "";
+                    "Super+Shift i".normal.command = rofimojiSpawn "--files all";
+                    "Super+Control i".normal.command = rofimojiSpawn "--files math";
+
+                    "Super p".normal.command = "spawn ${grimshotMenuScript}";
+
+                    "Super v".normal.command = "spawn ${setVolumeScript}";
+                    "Super+Shift v".normal.command = "spawn '${wpctl} set-mute @DEFAULT_AUDIO_SINK@ toggle'";
+
+                    # We should not need to specify the config,
+                    # but as of 2024-04-29,
+                    # we do.
+                    "Super m".normal.command =
+                      "spawn '${lib.getExe pkgs.wl-kbptr} -c ${homeManagerConfig.xdg.configHome}/wl-kbptr/config -o modes=floating,click -o mode_floating.source=detect'";
+                    "Super+Shift m".normal.command = "enter-mode mouse";
+                  };
+
+                layoutMenuScript = pkgs.writeShellScript "grimshot-menu.sh" ''
+                  function list_options {
+                    ${lib.strings.concatStringsSep ";" (
+                      map (x: ''echo "${x}"'') [
+                        "owm"
+                        "overview"
+                        "monocle"
+                      ]
+                    )}
+                  }
+
+                  selected=$( list_options | ${lib.getExe pkgs.rofi} -dmenu -p "layout" ${rofiArgs} )
+
+                  if [ -n "$selected" ]; then
+                    exec riverctl default-layout "$selected"
+                  fi
+                '';
+
+                grimshotMenuScript = pkgs.writeShellScript "grimshot-menu.sh" ''
+                  function list_options {
+                    echo "active"
+                    echo "area"
+                    echo "output"
+                    echo "screen"
+                    echo "window"
+                  }
+
+                  selected=$( list_options | ${lib.getExe pkgs.rofi} -dmenu -p "grimshot" ${rofiArgs} )
+
+                  if [ -n "$selected" ]; then
+                    ${lib.getExe' pkgs.coreutils "mkdir"} -p "${screenshotDir}"
+                    exec ${lib.getExe pkgs.sway-contrib.grimshot} \
+                      save \
+                      "$selected" \
+                      "${screenshotDir}/dated_$(${lib.getExe' pkgs.coreutils "date"} +"%Y_%m_%dt%H_%M_%S")-_.png"
+                  fi
+                '';
+                screenshotDir = "${homeManagerConfig.home.homeDirectory}/pictures/screenshots";
+
+                setVolumeScript = pkgs.writeScript "set-volume.nu" ''
+                  #!${lib.getExe pkgs.nushell}
+                  let volume = (${wpctl} get-volume @DEFAULT_SINK@ | split row ' ' | get 1 | into float | $in * 100 | into int)
+                  let new_volume = (${lib.getExe pkgs.rofi} -dmenu -p $"󰕾 ($volume)" ${rofiArgs} | into int)
+                  if $new_volume <= 100 {
+                    ${wpctl} set-volume @DEFAULT_AUDIO_SINK@ $"($new_volume)%"
+                  }
+                '';
+
+                rofimojiSpawn =
+                  args: ''spawn "${lib.getExe pkgs.rofimoji} --skin-tone ask ${args} --selector-args='${rofiArgs}'"'';
+                rofiArgs = "-sorting-method fzf -sort -monitor -1";
+
+                commonBindings = builtins.mapAttrs (_: value: value // { locked.enable = true; }) {
+                  # Audio controls:
+                  "None XF86AudioMute".normal.command = "spawn '${wpctl} set-mute @DEFAULT_AUDIO_SINK@ toggle'";
+                  "None XF86AudioLowerVolume".normal = {
+                    command = "spawn '${wpctl} set-volume @DEFAULT_AUDIO_SINK@ 1%-'";
+                    repeat = true;
+                  };
+                  "None XF86AudioRaiseVolume".normal = {
+                    command = "spawn '${wpctl} set-volume @DEFAULT_AUDIO_SINK@ 1%+'";
+                    repeat = true;
+                  };
+
+                  # Media player controls:
+                  # `XF86AudioMedia` is often used to toggle play/pause.
+                  "None XF86AudioMedia".normal.command = "spawn '${lib.getExe pkgs.playerctl} play-pause'";
+                  "None XF86AudioPlay".normal.command = "spawn '${lib.getExe pkgs.playerctl} play'";
+                  "None XF86AudioPause".normal.command = "spawn '${lib.getExe pkgs.playerctl} pause'";
+                  "None XF86AudioNext".normal.command = "spawn '${lib.getExe pkgs.playerctl} next'";
+                  "None XF86AudioPrev".normal.command = "spawn '${lib.getExe pkgs.playerctl} previous'";
+
+                  # Screen brightness controls:
+                  "None XF86MonBrightnessUp".normal = {
+                    command = "spawn 'brillo -A 3 -u 10000'";
+                    repeat = true;
+                  };
+                  "None XF86MonBrightnessDown".normal = {
+                    command = "spawn 'brillo -U 3 -u 10000'";
+                    repeat = true;
+                  };
+
+                  # We can add the following
+                  # when river supports toggling.
+                  # Alternatively,
+                  # we can manage toggle state ourselves.
+                  # # Touchpad controls:
+                  # "None XF86TouchpadToggle".normal.command = "spawn 'for i in $(riverctl list-inputs | rg 'pointer.*Touchpad'); do riverctl input $i events toggle; done'"
+                };
+                wpctl = "${pkgs.wireplumber}/bin/wpctl";
+
+                tagBindings = {
+                  "Super grave".normal.command = "set-focused-tags ${allTagsMask}";
+                  "Super+Shift grave".normal.command = "set-view-tags ${allTagsMask}";
+                }
+                // lib.foldl' (x: acc: acc // x) { } (
+                  lib.lists.zipListsWith
+                    (
+                      {
+                        mod,
+                        key,
+                      }:
+                      tagMask: {
+                        "Super${mod} ${key}".normal.command = "toggle-focused-tags ${tagMask}";
+                        "Super${mod}+Shift ${key}".normal.command = "set-view-tags ${tagMask}";
+                        "Super${mod}+Control ${key}".normal.command = "set-focused-tags ${tagMask}";
+                        "Super${mod}+Shift+Control ${key}".normal.command = "toggle-view-tags ${tagMask}";
+                      }
+                    )
+                    (
+                      map (x: {
+                        mod = "";
+                        key = x;
+                      }) tagKeys
+                      ++ map (x: {
+                        mod = "+Alt";
+                        key = x;
+                      }) tagKeys
+                    )
+                    (map (x: builtins.toString x) tagMasks)
+                );
+                tagKeys = (map (x: builtins.toString x) (lib.lists.range 1 9)) ++ [
+                  "0"
+                  "minus"
+                  "equal"
+                  "q"
+                  "w"
+                  "e"
+                  "r"
+                ];
+                allTagsMask = toString (lib.foldl' (x: acc: x + acc) 0 tagMasks);
+                tagMasks = map (x: pow 2 x) (lib.lists.range 0 31);
+                pow = x: n: pow_ x 1 n;
+                pow_ =
+                  b: x: n:
+                  if n == 0 then x else pow_ b (b * x) (n - 1);
+
+                # Some normal bindings don't work well without switching to normal mode first,
+                # like those that require typing into a pop-up,
+                # but fixing them for mouse mode isn't worthwhile.
+                mouseBindings = (
+                  builtins.mapAttrs (_: value: value // { normal.enable = false; }) {
+                    "None Escape".mouse.command = "enter-mode normal";
+
+                    "None m".mouse.command =
+                      "spawn 'riverctl enter-mode normal; ${lib.getExe pkgs.wl-kbptr} -c ${homeManagerConfig.xdg.configHome}/wl-kbptr/config -o modes=floating -o mode_floating.source=detect; riverctl enter-mode mouse'";
+                  }
+                  // (builtins.mapAttrs
+                    (_: value: {
+                      mouse = {
+                        command = value.mouse.command;
+                        repeat = true;
+                      };
+                    })
+                    {
+                      "None h".mouse.command = "spawn '${wlrctl} pointer move -10 0'";
+                      "None j".mouse.command = "spawn '${wlrctl} pointer move 0 10'";
+                      "None k".mouse.command = "spawn '${wlrctl} pointer move 0 -10'";
+                      "None l".mouse.command = "spawn '${wlrctl} pointer move 10 0'";
+                      "None y".mouse.command = "spawn '${wlrctl} pointer move -10 -10'";
+                      "None u".mouse.command = "spawn '${wlrctl} pointer move 10 -10'";
+                      "None b".mouse.command = "spawn '${wlrctl} pointer move -10 10'";
+                      "None n".mouse.command = "spawn '${wlrctl} pointer move 10 10'";
+                      "Control h".mouse.command = "spawn '${wlrctl} pointer move -1 0'";
+                      "Control j".mouse.command = "spawn '${wlrctl} pointer move 0 1'";
+                      "Control k".mouse.command = "spawn '${wlrctl} pointer move 0 -1'";
+                      "Control l".mouse.command = "spawn '${wlrctl} pointer move 1 0'";
+                      "Control y".mouse.command = "spawn '${wlrctl} pointer move -1 -1'";
+                      "Control u".mouse.command = "spawn '${wlrctl} pointer move 1 -1'";
+                      "Control b".mouse.command = "spawn '${wlrctl} pointer move -1 1'";
+                      "Control n".mouse.command = "spawn '${wlrctl} pointer move 1 1'";
+
+                      "None e".mouse.command = "spawn '${wlrctl} pointer scroll -10 0'";
+                      "None d".mouse.command = "spawn '${wlrctl} pointer scroll 10 0'";
+                      "None r".mouse.command = "spawn '${wlrctl} pointer scroll 0 -10'";
+                      "None t".mouse.command = "spawn '${wlrctl} pointer scroll 0 10'";
+                      "Control e".mouse.command = "spawn '${wlrctl} pointer scroll -1 0'";
+                      "Control d".mouse.command = "spawn '${wlrctl} pointer scroll 1 0'";
+                      "Control r".mouse.command = "spawn '${wlrctl} pointer scroll 0 -1'";
+                      "Control t".mouse.command = "spawn '${wlrctl} pointer scroll 0 1'";
+
+                      # These should keep click down until button is released
+                      # instead of repeating,
+                      # but `wlrctl` needs to support separate press and release first.
+                      "None f".mouse.command = "spawn '${wlrctl} pointer click left'";
+                      "None v".mouse.command = "spawn '${wlrctl} pointer click middle'";
+                      "None g".mouse.command = "spawn '${wlrctl} pointer click right'";
+                    }
+                  )
+                );
+                wlrctl = "${lib.getExe pkgs.wlrctl}";
+
+                homeManagerConfig = config'.home-manager.users.${name};
+              in
+              builtins.mapAttrs (_: value: lib.mkDefault value) (
+                normalBindings // commonBindings // tagBindings // mouseBindings
+              );
+          };
         }
       )
     );
@@ -286,59 +640,6 @@ in
       lib.mkMerge [
         (
           let
-            layoutMenuScript = pkgs.writeShellScript "grimshot-menu.sh" ''
-              function list_options {
-                ${lib.strings.concatStringsSep ";" (
-                  map (x: ''echo "${x}"'') [
-                    "owm"
-                    "overview"
-                    "monocle"
-                  ]
-                )}
-              }
-
-              selected=$( list_options | ${lib.getExe pkgs.rofi} -dmenu -p "layout" ${rofiArgs} )
-
-              if [ -n "$selected" ]; then
-                exec riverctl default-layout "$selected"
-              fi
-            '';
-
-            grimshotMenuScript = pkgs.writeShellScript "grimshot-menu.sh" ''
-              function list_options {
-                echo "active"
-                echo "area"
-                echo "output"
-                echo "screen"
-                echo "window"
-              }
-
-              selected=$( list_options | ${lib.getExe pkgs.rofi} -dmenu -p "grimshot" ${rofiArgs} )
-
-              if [ -n "$selected" ]; then
-                ${lib.getExe' pkgs.coreutils "mkdir"} -p "${screenshotDir}"
-                exec ${lib.getExe pkgs.sway-contrib.grimshot} \
-                  save \
-                  "$selected" \
-                  "${screenshotDir}/dated_$(${lib.getExe' pkgs.coreutils "date"} +"%Y_%m_%dt%H_%M_%S")-_.png"
-              fi
-            '';
-            screenshotDir = "${config.home.homeDirectory}/pictures/screenshots";
-
-            setVolumeScript = pkgs.writeScript "set-volume.nu" ''
-              #!${lib.getExe pkgs.nushell}
-              let volume = (${wpctl} get-volume @DEFAULT_SINK@ | split row ' ' | get 1 | into float | $in * 100 | into int)
-              let new_volume = (${lib.getExe pkgs.rofi} -dmenu -p $"󰕾 ($volume)" ${rofiArgs} | into int)
-              if $new_volume <= 100 {
-                ${wpctl} set-volume @DEFAULT_AUDIO_SINK@ $"($new_volume)%"
-              }
-            '';
-            wpctl = "${pkgs.wireplumber}/bin/wpctl";
-
-            rofimojiSpawn =
-              args: ''spawn "${lib.getExe pkgs.rofimoji} --skin-tone ask ${args} --selector-args='${rofiArgs}'"'';
-            rofiArgs = "-sorting-method fzf -sort -monitor -1";
-
             riverColor = s: "0x${s}";
           in
           {
@@ -438,242 +739,25 @@ in
                   declare-mode = modes;
                   map =
                     let
-                      normalBindings =
-                        commonBindings
-                        // tagBindings
-                        // (
-                          let
-                            remoteCfg = jstosUsers.${user}.shell.remote;
-                          in
-                          if remoteCfg.client.enable then
-                            {
-                              "Super+Control+Shift return" = "spawn 'mosh-window ${remoteCfg.address}'";
-                            }
-                          else
-                            { }
-                        )
-                        // {
-                          "Super+Shift return" = ''
-                            spawn 'shell-window --working-directory="${config.home.homeDirectory}"'
-                          '';
-                          "Super o" = "spawn '${lib.getExe pkgs.rofi} -modi drun -show drun ${rofiArgs}'";
-                          "Super+Control c" = "close";
-
-                          "Super return" = "zoom";
-                          "Super j" = "focus-view next";
-                          "Super k" = "focus-view previous";
-                          "Super+Shift j" = "swap next";
-                          "Super+Shift k" = "swap previous";
-
-                          "Super b" = "focus-output previous";
-                          "Super n" = "focus-output next";
-                          "Super+Shift b" = "send-to-output previous";
-                          "Super+Shift n" = "send-to-output next";
-
-                          # `flow` does not currently support moving tags.
-                          "Super y" = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32 --occupied'";
-                          "Super u" = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32 --occupied'";
-                          "Super+Control y" = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32'";
-                          "Super+Control u" = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32'";
-                          # "Super+Shift y" = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move previous 32'";
-                          # "Super+Shift u" = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move next 32'";
-
-                          "Super bracketleft" = "focus-previous-tags";
-                          "Super bracketright" = "focus-previous-tags";
-                          "Super+Shift bracketleft" = "send-to-previous-tags";
-                          "Super+Shift bracketright" = "send-to-previous-tags";
-
-                          "Super+Alt h"."-repeat" = "move left 10";
-                          "Super+Alt j"."-repeat" = "move down 10";
-                          "Super+Alt k"."-repeat" = "move up 10";
-                          "Super+Alt l"."-repeat" = "move right 10";
-                          "Super+Alt+Control h"."-repeat" = "move left 1";
-                          "Super+Alt+Control j"."-repeat" = "move down 1";
-                          "Super+Alt+Control k"."-repeat" = "move up 1";
-                          "Super+Alt+Control l"."-repeat" = "move right 1";
-
-                          "Super+Alt+Shift h"."-repeat" = "resize horizontal -10";
-                          "Super+Alt+Shift j"."-repeat" = "resize vertical 10";
-                          "Super+Alt+Shift k"."-repeat" = "resize vertical -10";
-                          "Super+Alt+Shift l"."-repeat" = "resize horizontal 10";
-                          "Super+Alt+Shift+Control h"."-repeat" = "resize horizontal -1";
-                          "Super+Alt+Shift+Control j"."-repeat" = "resize vertical 1";
-                          "Super+Alt+Shift+Control k"."-repeat" = "resize vertical -1";
-                          "Super+Alt+Shift+Control l"."-repeat" = "resize horizontal 1";
-
-                          "Super+Alt left" = "snap left";
-                          "Super+Alt down" = "snap down";
-                          "Super+Alt up" = "snap up";
-                          "Super+Alt right" = "snap right";
-
-                          "Super h" = ''send-layout-cmd kile "mod-main-ratio -0.05"'';
-                          "Super l" = ''send-layout-cmd kile "mod-main-ratio +0.05"'';
-                          "Super+Shift h" = ''send-layout-cmd kile "mod-main-count +1"'';
-                          "Super+Shift l" = ''send-layout-cmd kile "mod-main-count -1"'';
-                          "Super+Control h" = ''send-layout-cmd kile "mod-main-index +1"'';
-                          "Super+Control l" = ''send-layout-cmd kile "mod-main-index -1"'';
-                          "Super semicolon" = "spawn ${layoutMenuScript}";
-
-                          "Super f" = "toggle-fullscreen";
-                          "Super space" = "toggle-float";
-
-                          "Super i" = rofimojiSpawn "";
-                          "Super+Shift i" = rofimojiSpawn "--files all";
-                          "Super+Control i" = rofimojiSpawn "--files math";
-
-                          "Super p" = "spawn ${grimshotMenuScript}";
-
-                          "Super v" = "spawn ${setVolumeScript}";
-                          "Super+Shift v" = "spawn '${wpctl} set-mute @DEFAULT_AUDIO_SINK@ toggle'";
-
-                          # We should not need to specify the config,
-                          # but as of 2024-04-29,
-                          # we do.
-                          "Super m" =
-                            "spawn '${lib.getExe pkgs.wl-kbptr} -c ${config.xdg.configHome}/wl-kbptr/config -o modes=floating,click -o mode_floating.source=detect'";
-                          "Super+Shift m" = "enter-mode mouse";
-                        };
-
-                      commonBindings = {
-                        # Audio controls:
-                        "None XF86AudioMute" = "spawn '${wpctl} set-mute @DEFAULT_AUDIO_SINK@ toggle'";
-                        "None XF86AudioLowerVolume"."-repeat" = "spawn '${wpctl} set-volume @DEFAULT_AUDIO_SINK@ 1%-'";
-                        "None XF86AudioRaiseVolume"."-repeat" = "spawn '${wpctl} set-volume @DEFAULT_AUDIO_SINK@ 1%+'";
-
-                        # Media player controls:
-                        # `XF86AudioMedia` is often used to toggle play/pause.
-                        "None XF86AudioMedia" = "spawn '${lib.getExe pkgs.playerctl} play-pause'";
-                        "None XF86AudioPlay" = "spawn '${lib.getExe pkgs.playerctl} play'";
-                        "None XF86AudioPause" = "spawn '${lib.getExe pkgs.playerctl} pause'";
-                        "None XF86AudioNext" = "spawn '${lib.getExe pkgs.playerctl} next'";
-                        "None XF86AudioPrev" = "spawn '${lib.getExe pkgs.playerctl} previous'";
-
-                        # Screen brightness controls:
-                        "None XF86MonBrightnessUp"."-repeat" = "spawn 'brillo -A 3 -u 10000'";
-                        "None XF86MonBrightnessDown"."-repeat" = "spawn 'brillo -U 3 -u 10000'";
-
-                        # We can add the following
-                        # when river supports toggling.
-                        # Alternatively,
-                        # we can manage toggle state ourselves.
-                        # # Touchpad controls:
-                        # "None XF86TouchpadToggle" = "spawn 'for i in $(riverctl list-inputs | rg 'pointer.*Touchpad'); do riverctl input $i events toggle; done'"
-                      };
-
-                      tagBindings = {
-                        "Super grave" = "set-focused-tags ${allTagsMask}";
-                        "Super+Shift grave" = "set-view-tags ${allTagsMask}";
-                      }
-                      // lib.foldl' (x: acc: acc // x) { } (
-                        lib.lists.zipListsWith
-                          (
-                            {
-                              mod,
-                              key,
-                            }:
-                            tagMask: {
-                              "Super${mod} ${key}" = "toggle-focused-tags ${tagMask}";
-                              "Super${mod}+Shift ${key}" = "set-view-tags ${tagMask}";
-                              "Super${mod}+Control ${key}" = "set-focused-tags ${tagMask}";
-                              "Super${mod}+Shift+Control ${key}" = "toggle-view-tags ${tagMask}";
-                            }
-                          )
-                          (
-                            map (x: {
-                              mod = "";
-                              key = x;
-                            }) tagKeys
-                            ++ map (x: {
-                              mod = "+Alt";
-                              key = x;
-                            }) tagKeys
-                          )
-                          (map (x: builtins.toString x) tagMasks)
-                      );
-                      tagKeys = (map (x: builtins.toString x) (lib.lists.range 1 9)) ++ [
-                        "0"
-                        "minus"
-                        "equal"
-                        "q"
-                        "w"
-                        "e"
-                        "r"
-                      ];
-                      allTagsMask = toString (lib.foldl' (x: acc: x + acc) 0 tagMasks);
-                      tagMasks = map (x: pow 2 x) (lib.lists.range 0 31);
-                      pow = x: n: pow_ x 1 n;
-                      pow_ =
-                        b: x: n:
-                        if n == 0 then x else pow_ b (b * x) (n - 1);
-
-                      inverse =
-                        input:
-                        lib.foldl' lib.recursiveUpdate { } (
-                          lib.flatten (
-                            lib.mapAttrsToList (
-                              mode: keyAttrs:
-                              lib.mapAttrsToList (
-                                key: rhs:
-                                if builtins.isAttrs rhs then
-                                  lib.mapAttrs' (name: value: lib.nameValuePair name { ${mode}.${key} = value; }) rhs
-                                else
-                                  { ${mode}.${key} = rhs; }
-                              ) keyAttrs
-                            ) input
+                      bindingsFor =
+                        mode: repeat:
+                        builtins.mapAttrs (_: value: value.command) (
+                          lib.filterAttrs (_: value: value.repeat == repeat) (
+                            lib.filterAttrs (_: value: value.enable) (builtins.mapAttrs (_: value: value.${mode}) cfg.bindings)
                           )
                         );
                     in
-                    inverse {
-                      locked = commonBindings;
-                      normal = normalBindings;
-
-                      mouse =
-                        let
-                          wlrctl = "${lib.getExe pkgs.wlrctl}";
-                        in
-                        # Some normal bindings don't work well without switching to normal mode first,
-                        # like those that require typing into a pop-up,
-                        # but fixing them for mouse mode isn't worthwhile.
-                        normalBindings
-                        // {
-                          "None Escape" = "enter-mode normal";
-
-                          "None m" =
-                            "spawn 'riverctl enter-mode normal; ${lib.getExe pkgs.wl-kbptr} -c ${config.xdg.configHome}/wl-kbptr/config -o modes=floating -o mode_floating.source=detect; riverctl enter-mode mouse'";
-
-                          "None h"."-repeat" = "spawn '${wlrctl} pointer move -10 0'";
-                          "None j"."-repeat" = "spawn '${wlrctl} pointer move 0 10'";
-                          "None k"."-repeat" = "spawn '${wlrctl} pointer move 0 -10'";
-                          "None l"."-repeat" = "spawn '${wlrctl} pointer move 10 0'";
-                          "None y"."-repeat" = "spawn '${wlrctl} pointer move -10 -10'";
-                          "None u"."-repeat" = "spawn '${wlrctl} pointer move 10 -10'";
-                          "None b"."-repeat" = "spawn '${wlrctl} pointer move -10 10'";
-                          "None n"."-repeat" = "spawn '${wlrctl} pointer move 10 10'";
-                          "Control h"."-repeat" = "spawn '${wlrctl} pointer move -1 0'";
-                          "Control j"."-repeat" = "spawn '${wlrctl} pointer move 0 1'";
-                          "Control k"."-repeat" = "spawn '${wlrctl} pointer move 0 -1'";
-                          "Control l"."-repeat" = "spawn '${wlrctl} pointer move 1 0'";
-                          "Control y"."-repeat" = "spawn '${wlrctl} pointer move -1 -1'";
-                          "Control u"."-repeat" = "spawn '${wlrctl} pointer move 1 -1'";
-                          "Control b"."-repeat" = "spawn '${wlrctl} pointer move -1 1'";
-                          "Control n"."-repeat" = "spawn '${wlrctl} pointer move 1 1'";
-
-                          "None e"."-repeat" = "spawn '${wlrctl} pointer scroll -10 0'";
-                          "None d"."-repeat" = "spawn '${wlrctl} pointer scroll 10 0'";
-                          "None r"."-repeat" = "spawn '${wlrctl} pointer scroll 0 -10'";
-                          "None t"."-repeat" = "spawn '${wlrctl} pointer scroll 0 10'";
-                          "Control e"."-repeat" = "spawn '${wlrctl} pointer scroll -1 0'";
-                          "Control d"."-repeat" = "spawn '${wlrctl} pointer scroll 1 0'";
-                          "Control r"."-repeat" = "spawn '${wlrctl} pointer scroll 0 -1'";
-                          "Control t"."-repeat" = "spawn '${wlrctl} pointer scroll 0 1'";
-
-                          # These should keep click down until button is released
-                          # instead of repeating,
-                          # but `wlrctl` needs to support separate press and release first.
-                          "None f"."-repeat" = "spawn '${wlrctl} pointer click left'";
-                          "None v"."-repeat" = "spawn '${wlrctl} pointer click middle'";
-                          "None g"."-repeat" = "spawn '${wlrctl} pointer click right'";
-                        };
+                    {
+                      normal = bindingsFor "normal" false;
+                      mouse = bindingsFor "mouse" false;
+                      locked = bindingsFor "locked" false;
+                    }
+                    // {
+                      "-repeat" = {
+                        normal = bindingsFor "normal" true;
+                        mouse = bindingsFor "mouse" true;
+                        locked = bindingsFor "locked" true;
+                      };
                     };
 
                   map-pointer.normal = {
