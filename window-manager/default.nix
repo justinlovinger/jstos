@@ -11,6 +11,13 @@ let
   config' = config;
 in
 {
+  imports = [
+    ./dictation.nix
+    ./idle.nix
+    ./osk.nix
+    ./toggle-display.nix
+  ];
+
   options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
@@ -72,233 +79,6 @@ in
               description = ''
                 Swap behavior of Caps Lock and Esc.
               '';
-            };
-
-            osk = {
-              enable = lib.mkOption {
-                type = lib.types.bool;
-                default = false;
-                example = "true";
-                description = ''
-                  Whether to enable the on-screen-keyboard.
-                '';
-              };
-
-              binding = lib.mkOption {
-                type = lib.types.str;
-                example = "None XF86AudioRaiseVolume";
-                description = ''
-                  Binding to toggle OSK.
-                '';
-              };
-
-              portrait.height = lib.mkOption {
-                type = lib.types.int;
-                default = 500;
-                example = 600;
-                description = ''
-                  Height of OSK in portrait mode.
-                '';
-              };
-              landscape.height = lib.mkOption {
-                type = lib.types.int;
-                default = 300;
-                example = 350;
-                description = ''
-                  Height of OSK in landscape mode.
-                '';
-              };
-
-              swipe = {
-                enable = lib.mkEnableOption "swipe typing";
-
-                wordList = lib.mkOption {
-                  type = lib.types.path;
-                  default = pkgs.runCommandLocal "words.txt" { } ''
-                    ${lib.getExe' pkgs.coreutils "cut"} -f1 ${
-                      pkgs.fetchurl {
-                        url = "https://norvig.com/ngrams/count_1w.txt";
-                        hash = "sha256-Ud8Vn9PeErIOQDwQj1JultvXI9nKvdXxeVXNwWBZ5pA=";
-                      }
-                    } > $out
-                  '';
-                  description = ''
-                    Word list for SwipeGuess.
-                  '';
-                };
-              };
-            };
-
-            toggleDisplay = {
-              enable = lib.mkOption {
-                type = lib.types.bool;
-                default = false;
-                example = "true";
-                description = ''
-                  Whether to enable the toggle-display key.
-                '';
-              };
-
-              binding = lib.mkOption {
-                type = lib.types.str;
-                example = "None XF86AudioRaiseVolume";
-                description = ''
-                  Binding to toggle display.
-                '';
-              };
-
-              name = lib.mkOption {
-                type = lib.types.str;
-                default = "eDP-1";
-                example = "DP-1";
-                description = ''
-                  Name of display to toggle,
-                  as provided by `way-displays`.
-                '';
-              };
-
-              disableTouch = {
-                enable = lib.mkOption {
-                  type = lib.types.bool;
-                  default = true;
-                  example = "false";
-                  description = ''
-                    Whether to disable a touchscreen when display is off.
-                  '';
-                };
-
-                input = lib.mkOption {
-                  type = lib.types.str;
-                  default = "touch-*";
-                  example = "touch-10248-4117-FTS3528:00_2808:1015";
-                  description = ''
-                    Name of touchscreen to disable when display is off.
-                  '';
-                };
-              };
-            };
-
-            idle = {
-              enable = lib.mkEnableOption "idle timeouts";
-
-              displays = {
-                enable = lib.mkOption {
-                  type = lib.types.bool;
-                  default = true;
-                  description = ''
-                    Whether or not to blank displays.
-                  '';
-                };
-
-                timeout = lib.mkOption {
-                  type = lib.types.int;
-                  default = 300;
-                  description = ''
-                    Idle seconds before display is blanked.
-                  '';
-                };
-              };
-
-              lock = {
-                enable = lib.mkEnableOption "lock";
-
-                timeout = lib.mkOption {
-                  type = lib.types.int;
-                  default = config.windowManager.idle.displays.timeout + 15;
-                  description = ''
-                    Idle seconds before session is locked.
-                  '';
-                };
-
-                afterSleep = lib.mkOption {
-                  type = lib.types.bool;
-                  default = true;
-                  description = ''
-                    Whether or not to lock if system sleeps for `lock.timeout`.
-                  '';
-                };
-
-                command = lib.mkOption {
-                  type = lib.types.str;
-                  default =
-                    with config.home-manager.users.${name}.colors.hexWithoutHash;
-                    lib.concatStringsSep " " [
-                      "${lib.getExe pkgs.swaylock}"
-
-                      "--indicator-radius 100"
-
-                      # Use system colors.
-                      "--color ${bg.normal}"
-
-                      "--key-hl-color ${fg.normal}"
-                      "--bs-hl-color ${fg.normal}"
-                      "--caps-lock-key-hl-color ${fg.yellow}"
-                      "--caps-lock-bs-hl-color ${fg.yellow}"
-
-                      "--inside-color ${bg.normal}"
-                      "--inside-clear-color ${bg.normal}"
-                      "--inside-caps-lock-color ${bg.normal}"
-                      "--inside-ver-color ${bg.normal}"
-                      "--inside-wrong-color ${bg.normal}"
-
-                      "--layout-bg-color ${bg.normal}"
-                      "--layout-border-color ${fg.normal}"
-                      "--layout-text-color ${fg.normal}"
-
-                      "--line-color ${fg.normal}"
-                      "--line-clear-color ${fg.normal}"
-                      "--line-caps-lock-color ${fg.yellow}"
-                      "--line-ver-color ${fg.blue}"
-                      "--line-wrong-color ${fg.red}"
-
-                      "--ring-color ${bg.normal}"
-                      "--ring-clear-color ${bg.normal}"
-                      "--ring-caps-lock-color ${bg.normal}"
-                      "--ring-ver-color ${fg.blue}"
-                      "--ring-wrong-color ${fg.red}"
-
-                      "--separator-color ${bg.normal}"
-
-                      "--text-color ${fg.normal}"
-                      "--text-clear-color ${fg.normal}"
-                      "--text-caps-lock-color ${fg.normal}"
-                      "--text-ver-color ${fg.normal}"
-                      "--text-wrong-color ${fg.normal}"
-                    ];
-                  description = ''
-                    Command to lock session.
-
-                    Note,
-                    `swaylock` must run without `-f`,
-                    so post-lock commands wait
-                    for lock to end.
-                  '';
-                };
-              };
-
-              suspend = {
-                enable = lib.mkEnableOption "suspend";
-
-                timeout = lib.mkOption {
-                  type = lib.types.int;
-                  default = config.windowManager.idle.displays.timeout + 30;
-                  description = ''
-                    Idle seconds before machine suspends.
-                  '';
-                };
-              };
-            };
-
-            dictation = {
-              enable = lib.mkEnableOption "dictation";
-
-              binding = lib.mkOption {
-                type = lib.types.str;
-                default = "Super d";
-                description = ''
-                  Binding to use dictation.
-                '';
-              };
             };
           };
 
@@ -631,531 +411,230 @@ in
         ...
       }:
       let
-        modes = [
-          "locked"
-          "normal"
-          "mouse"
-        ];
+        riverColor = s: "0x${s}";
       in
-      lib.mkMerge [
-        (
-          let
-            riverColor = s: "0x${s}";
-          in
-          {
-            home.packages = with pkgs; [ bibata-cursors ];
+      {
+        home.packages = with pkgs; [ bibata-cursors ];
 
-            programs.i3bar-river = {
-              enable = true;
-              settings = with config.colors.hex; {
-                command = toString (lib.getExe config.programs.i3status.package);
+        programs.i3bar-river = {
+          enable = true;
+          settings = with config.colors.hex; {
+            command = toString (lib.getExe config.programs.i3status.package);
 
-                background = bg.normal;
-                color = fg.normal;
-                separator = bg.normal;
-                tag_fg = fg.normal;
-                tag_bg = bg.normal;
-                tag_focused_bg = fg.faded;
-                tag_focused_fg = bg.normal;
-                tag_urgent_bg = bg.red;
-                tag_urgent_fg = fg.normal;
+            background = bg.normal;
+            color = fg.normal;
+            separator = bg.normal;
+            tag_fg = fg.normal;
+            tag_bg = bg.normal;
+            tag_focused_bg = fg.faded;
+            tag_focused_fg = bg.normal;
+            tag_urgent_bg = bg.red;
+            tag_urgent_fg = fg.normal;
 
-                font = "monospace 8";
-                height = 16;
-                tags_padding = 6;
+            font = "monospace 8";
+            height = 16;
+            tags_padding = 6;
 
-                position = "bottom";
-                show_layout_name = false;
+            position = "bottom";
+            show_layout_name = false;
 
-                wm.river.max_tag = 32;
-              };
-            };
-            systemd.user.services.i3bar-river = {
-              Unit = {
-                Description = "Status bar";
-                PartOf = config.wayland.systemd.target;
-                Requires = config.wayland.systemd.target;
-                After = config.wayland.systemd.target;
-                X-Restart-Triggers = [
-                  config.xdg.configFile."i3bar-river/config.toml".source
-                  config.xdg.configFile."i3status/config".source
-                ];
-              };
-              Install = {
-                WantedBy = [ config.wayland.systemd.target ];
-              };
-              Service = {
-                Type = "simple";
-                Environment = "PATH=/bin"; # `i3bar-river` calls `sh` to run its `command`.
-                ExecStart = toString (lib.getExe config.programs.i3bar-river.package);
-                Restart = "always";
-              };
-            };
+            wm.river.max_tag = 32;
+          };
+        };
+        systemd.user.services.i3bar-river = {
+          Unit = {
+            Description = "Status bar";
+            PartOf = config.wayland.systemd.target;
+            Requires = config.wayland.systemd.target;
+            After = config.wayland.systemd.target;
+            X-Restart-Triggers = [
+              config.xdg.configFile."i3bar-river/config.toml".source
+              config.xdg.configFile."i3status/config".source
+            ];
+          };
+          Install = {
+            WantedBy = [ config.wayland.systemd.target ];
+          };
+          Service = {
+            Type = "simple";
+            Environment = "PATH=/bin"; # `i3bar-river` calls `sh` to run its `command`.
+            ExecStart = toString (lib.getExe config.programs.i3bar-river.package);
+            Restart = "always";
+          };
+        };
 
-            services.mako = {
-              enable = true;
-              settings = with config.colors.hex; {
-                font = "monospace 14";
-                background-color = bg.normal;
-                text-color = fg.normal;
-                border-size = 1;
-                border-color = fg.normal;
-                progress-color = bg.faded;
-                layer = "overlay";
-              };
-            };
+        services.mako = {
+          enable = true;
+          settings = with config.colors.hex; {
+            font = "monospace 14";
+            background-color = bg.normal;
+            text-color = fg.normal;
+            border-size = 1;
+            border-color = fg.normal;
+            progress-color = bg.faded;
+            layer = "overlay";
+          };
+        };
 
-            services.way-displays = {
-              enable = true;
-              settings = {
-                AUTO_SCALE = false;
-                CALLBACK_CMD = null;
-              };
-            };
+        services.way-displays = {
+          enable = true;
+          settings = {
+            AUTO_SCALE = false;
+            CALLBACK_CMD = null;
+          };
+        };
 
-            wayland.windowManager.river = {
-              enable = true;
+        wayland.windowManager.river = {
+          enable = true;
 
-              settings =
-                with config.colors.hexWithoutHash;
-                {
-                  attach-mode = "top";
+          settings =
+            with config.colors.hexWithoutHash;
+            {
+              attach-mode = "top";
 
-                  background-color = riverColor bg.normal;
+              background-color = riverColor bg.normal;
 
-                  # We would like to remove borders from floating windows,
-                  # but River does not support this
-                  # as of 2023-06-26.
-                  # `rule-add` may support this in the future.
-                  border-color-focused = riverColor fg.normal;
-                  border-color-unfocused = riverColor bg.faded;
-                  border-color-urgent = riverColor fg.red;
-                  border-width = 1;
+              # We would like to remove borders from floating windows,
+              # but River does not support this
+              # as of 2023-06-26.
+              # `rule-add` may support this in the future.
+              border-color-focused = riverColor fg.normal;
+              border-color-unfocused = riverColor bg.faded;
+              border-color-urgent = riverColor fg.red;
+              border-width = 1;
 
-                  set-repeat = "50 300";
+              set-repeat = "50 300";
 
-                  hide-cursor.timeout = 4000;
+              hide-cursor.timeout = 4000;
 
-                  declare-mode = modes;
-                  map =
-                    let
-                      bindingsFor =
-                        mode: repeat:
-                        builtins.mapAttrs (_: value: value.command) (
-                          lib.filterAttrs (_: value: value.repeat == repeat) (
-                            lib.filterAttrs (_: value: value.enable) (builtins.mapAttrs (_: value: value.${mode}) cfg.bindings)
-                          )
-                        );
-                    in
-                    {
-                      normal = bindingsFor "normal" false;
-                      mouse = bindingsFor "mouse" false;
-                      locked = bindingsFor "locked" false;
-                    }
-                    // {
-                      "-repeat" = {
-                        normal = bindingsFor "normal" true;
-                        mouse = bindingsFor "mouse" true;
-                        locked = bindingsFor "locked" true;
-                      };
-                    };
+              declare-mode = [
+                "normal"
+                "mouse"
+                "locked"
+              ];
 
-                  map-pointer.normal = {
-                    "Super BTN_LEFT" = "move-view";
-                    "Super BTN_RIGHT" = "resize-view";
-                    "Super BTN_MIDDLE" = "toggle-float";
-                  };
-
-                  xcursor-theme = "Bibata-Original-Classic";
-                }
-                // (if cfg.swapCapsEsc then { keyboard-layout = "-options caps:swapescape us"; } else { })
-                // (
-                  # `way-displays` can detect lid closing and opening,
-                  # but it only disables the display
-                  # if another monitor is plugged in.
-                  if config.devices.display.laptop.name == null then
-                    { }
-                  else
-                    {
-                      map-switch = builtins.listToAttrs (
-                        map
-                          (mode: {
-                            name = mode;
-                            value = {
-                              "lid close" =
-                                "spawn '${lib.getExe pkgs.way-displays} -s DISABLED ${config.devices.display.laptop.name}'";
-                              "lid open" =
-                                "spawn '${lib.getExe pkgs.way-displays} -d DISABLED ${config.devices.display.laptop.name}'";
-                            };
-                          })
-                          [
-                            "normal"
-                            "locked"
-                          ]
-                      );
-                    }
-                );
-
-              extraConfig =
+              map =
                 let
-                  border = config.wayland.windowManager.river.settings.border-width;
+                  bindingsFor =
+                    mode: repeat:
+                    builtins.mapAttrs (_: value: value.command) (
+                      lib.filterAttrs (_: value: value.repeat == repeat) (
+                        lib.filterAttrs (_: value: value.enable) (builtins.mapAttrs (_: value: value.${mode}) cfg.bindings)
+                      )
+                    );
                 in
-                ''
-                  for i in $(riverctl list-inputs | rg '^pointer.*'); do
-                    riverctl input $i accel-profile flat
-                  done
-                  for i in $(riverctl list-inputs | rg '^pointer.*Touchpad$'); do
-                    riverctl input $i accel-profile adaptive
-                    riverctl input $i disable-while-typing enabled
-                    riverctl input $i natural-scroll enabled
-                    riverctl input $i tap enabled
-                  done
-
-                  riverctl spawn '${lib.getExe' pkgs.owm "owm"} --overlap-borders-by ${builtins.toString border} --reading-order-weight=1'
-                  riverctl spawn '${lib.getExe' pkgs.owm "owm"} --namespace overview --overlap-borders-by ${builtins.toString border} --max-width "" --area-ratios 1 --center-main-weight 0'
-                  riverctl spawn '${lib.getExe' pkgs.owm "owm"} --namespace monocle --overlap-borders-by ${builtins.toString border} --min-width 9999 --min-height 9999 --max-width ""'
-                  riverctl default-layout owm
-                '';
-
-              extraSessionVariables = {
-                # QT apps will not use Wayland by default.
-                QT_QPA_PLATFORM = "wayland";
-                QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
-                # Some Java AWT applications,
-                # such as Android Studio,
-                # break without the following:
-                _JAVA_AWT_WM_NONREPARENTING = "1";
-              };
-            };
-
-            xdg.configFile."wl-kbptr/config".text = with config.colors.hex; ''
-              [mode_tile]
-              label_color=${fg.normal}
-              label_select_color=${fg.faded}cc
-              unselectable_bg_color=#0000
-              selectable_bg_color=${bg.normal}55
-              selectable_border_color=${fg.faded}cc
-
-              [mode_floating]
-              label_color=${fg.normal}
-              label_select_color=${fg.faded}
-              label_font_size=20 75% 100
-              unselectable_bg_color=#0000
-              selectable_bg_color=${bg.normal}aa
-              selectable_border_color=${fg.faded}cc
-
-              [mode_bisect]
-              label_color=${fg.normal}
-              label_font_size=20
-              label_padding=12
-              pointer_size=20
-              pointer_color=${fg.normal}
-              unselectable_bg_color=#0000
-              even_area_bg_color=${bg.normal}55
-              even_area_border_color=${fg.faded}cc
-              odd_area_bg_color=${bg.normal}55
-              odd_area_border_color=${fg.faded}cc
-              history_border_color=${fg.faded}cc
-            '';
-          }
-        )
-
-        (
-          let
-            cfg_ = cfg.osk;
-            osk = "${lib.getExe' pkgs.wvkbd "wvkbd-deskintl"}";
-            oskState = ''$"($env.XDG_RUNTIME_DIR)/osk"'';
-          in
-          lib.mkIf cfg_.enable {
-            systemd.user.services.osk = {
-              Unit = {
-                Description = "On-Screen-Keyboard Daemon";
-                After = [ config.wayland.systemd.target ];
-                PartOf = [ config.wayland.systemd.target ];
-              };
-              Install.WantedBy = [ config.wayland.systemd.target ];
-              Service = {
-                ExecStart =
-                  let
-                    oskCmd = "${osk} --hidden -H ${toString cfg_.portrait.height} -L ${toString cfg_.landscape.height}";
-                    completelyTypeWord = pkgs.writeShellApplication {
-                      name = "completelyTypeWord.sh";
-                      text = "${pkgs.swipe-guess.src}/completelyTypeWord.sh";
-                      runtimeInputs = [ pkgs.wtype ];
-                    };
-                  in
-                  if cfg_.swipe.enable then
-                    pkgs.writeShellScript "osk" ''
-                      ${oskCmd} -O | ${lib.getExe pkgs.swipe-guess} ${cfg_.swipe.wordList} | ${lib.getExe completelyTypeWord}
-                    ''
-                  else
-                    oskCmd;
-                ExecStartPost = pkgs.writeScript "set-osk-pid" ''
-                  #!${lib.getExe pkgs.nushell}
-                  (open $"/sys/fs/cgroup(${lib.getExe' pkgs.systemd "systemctl"} --user show --property=ControlGroup --value osk.service)/cgroup.procs"
-                      | lines
-                      | where {|x| (${lib.getExe' pkgs.procps "ps"} --no-headers -o args $x | split row " " | get 0) == ${osk} }
-                      | get 0
-                      | save -f ${oskState})
-                '';
-                Restart = "always";
-                StandardOutput = "journal";
-              };
-            };
-            wayland.windowManager.river.settings.map =
-              let
-                oskMappings = {
-                  ${cfg_.binding} = lib.mkForce "spawn ${toggleOsk}";
+                {
+                  normal = bindingsFor "normal" false;
+                  mouse = bindingsFor "mouse" false;
+                  locked = bindingsFor "locked" false;
+                }
+                // {
+                  "-repeat" = {
+                    normal = bindingsFor "normal" true;
+                    mouse = bindingsFor "mouse" true;
+                    locked = bindingsFor "locked" true;
+                  };
                 };
-                toggleOsk = pkgs.writeScript "toggle-osk" ''
-                  #!${lib.getExe pkgs.nushell}
-                  ${lib.getExe' pkgs.coreutils "kill"} -SIGRTMIN (open ${oskState})
-                '';
-              in
-              builtins.listToAttrs (map (name: lib.nameValuePair name oskMappings) modes)
-              // {
-                "-repeat" = builtins.listToAttrs (
-                  map (
-                    name:
-                    lib.nameValuePair name {
-                      ${cfg_.binding} = lib.mkForce null;
-                    }
-                  ) modes
-                );
+
+              map-pointer.normal = {
+                "Super BTN_LEFT" = "move-view";
+                "Super BTN_RIGHT" = "resize-view";
+                "Super BTN_MIDDLE" = "toggle-float";
               };
-          }
-        )
 
-        (
-          let
-            cfg_ = cfg.toggleDisplay;
-          in
-          lib.mkIf cfg_.enable {
-            wayland.windowManager.river.settings.map =
-              let
-                displayMappings = {
-                  ${cfg_.binding} = lib.mkForce "spawn ${toggleDisplay}";
-                };
-                toggleDisplay = pkgs.writeScript "toggle-display" ''
-                  #!${lib.getExe pkgs.nushell}
-                  if (${lib.getExe pkgs.way-displays} -y -g | from yaml | get STATE | get HEADS | where NAME == ${cfg_.name} | get 0 | get CURRENT | get ENABLED) {
-                    ${lib.getExe pkgs.way-displays} -s DISABLED ${cfg_.name}
-                    ${
-                      if cfg.toggleDisplay.disableTouch.enable then
-                        "${lib.getExe' pkgs.river "riverctl"} input ${cfg_.disableTouch.input} events disabled"
-                      else
-                        ""
-                    }
-                  } else {
-                    ${lib.getExe pkgs.way-displays} -d DISABLED ${cfg_.name}
-                    ${
-                      if cfg.toggleDisplay.disableTouch.enable then
-                        "${lib.getExe' pkgs.river "riverctl"} input ${cfg_.disableTouch.input} events enabled"
-                      else
-                        ""
-                    }
-                  }
-                '';
-              in
-              builtins.listToAttrs (map (name: lib.nameValuePair name displayMappings) modes)
-              // {
-                "-repeat" = builtins.listToAttrs (
-                  map (
-                    name:
-                    lib.nameValuePair name {
-                      ${cfg_.binding} = lib.mkForce null;
-                    }
-                  ) modes
-                );
-              };
-          }
-        )
+              xcursor-theme = "Bibata-Original-Classic";
+            }
+            // (if cfg.swapCapsEsc then { keyboard-layout = "-options caps:swapescape us"; } else { })
+            // (
+              # `way-displays` can detect lid closing and opening,
+              # but it only disables the display
+              # if another monitor is plugged in.
+              if config.devices.display.laptop.name == null then
+                { }
+              else
+                {
+                  map-switch = builtins.listToAttrs (
+                    map
+                      (mode: {
+                        name = mode;
+                        value = {
+                          "lid close" =
+                            "spawn '${lib.getExe pkgs.way-displays} -s DISABLED ${config.devices.display.laptop.name}'";
+                          "lid open" =
+                            "spawn '${lib.getExe pkgs.way-displays} -d DISABLED ${config.devices.display.laptop.name}'";
+                        };
+                      })
+                      [
+                        "normal"
+                        "locked"
+                      ]
+                  );
+                }
+            );
 
-        (
-          let
-            cfg_ = cfg.idle;
+          extraConfig =
+            let
+              border = config.wayland.windowManager.river.settings.border-width;
+            in
+            ''
+              for i in $(riverctl list-inputs | rg '^pointer.*'); do
+                riverctl input $i accel-profile flat
+              done
+              for i in $(riverctl list-inputs | rg '^pointer.*Touchpad$'); do
+                riverctl input $i accel-profile adaptive
+                riverctl input $i disable-while-typing enabled
+                riverctl input $i natural-scroll enabled
+                riverctl input $i tap enabled
+              done
 
-            lockCommand = "systemctl --user start lock.service";
-            lockScript = pkgs.writeShellScript "lock.sh" ''
-              # Reduce screen blank timeout
-              # for lockscreen.
-              ${lib.getExe pkgs.swayidle} -w \
-                timeout 15 '${disableAll lockDisplaysState}' \
-                resume '${enableAll lockDisplaysState}' &
-              swayidle_pid=$!
-
-              ${cfg_.lock.command}
-              swaylock_ret=$?
-
-              ${enableAll lockDisplaysState}
-              kill $swayidle_pid
-              exit $swaylock_ret
+              riverctl spawn '${lib.getExe' pkgs.owm "owm"} --overlap-borders-by ${builtins.toString border} --reading-order-weight=1'
+              riverctl spawn '${lib.getExe' pkgs.owm "owm"} --namespace overview --overlap-borders-by ${builtins.toString border} --max-width "" --area-ratios 1 --center-main-weight 0'
+              riverctl spawn '${lib.getExe' pkgs.owm "owm"} --namespace monocle --overlap-borders-by ${builtins.toString border} --min-width 9999 --min-height 9999 --max-width ""'
+              riverctl default-layout owm
             '';
 
-            lockBeforeSleepScript = pkgs.writeShellScript "lock-before-sleep.sh" ''
-              ${lib.getExe' pkgs.coreutils "date"} +%s > "${timestampFile}"
-            '';
-            lockAfterSleepScript = pkgs.writeShellScript "lock-after-sleep.sh" ''
-              read -r before < "${timestampFile}"
-              current=$( ${lib.getExe' pkgs.coreutils "date"} +%s )
-              elapsed=$(( current - before ))
+          extraSessionVariables = {
+            # QT apps will not use Wayland by default.
+            QT_QPA_PLATFORM = "wayland";
+            QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
+            # Some Java AWT applications,
+            # such as Android Studio,
+            # break without the following:
+            _JAVA_AWT_WM_NONREPARENTING = "1";
+          };
+        };
 
-              if (( elapsed > ${toString cfg_.lock.timeout} )); then
-                exec ${lockCommand}
-              fi
-            '';
-            timestampFile = "$XDG_RUNTIME_DIR/lock-after-sleep-timestamp";
+        xdg.configFile."wl-kbptr/config".text = with config.colors.hex; ''
+          [mode_tile]
+          label_color=${fg.normal}
+          label_select_color=${fg.faded}cc
+          unselectable_bg_color=#0000
+          selectable_bg_color=${bg.normal}55
+          selectable_border_color=${fg.faded}cc
 
-            disableAll =
-              state:
-              pkgs.writeScript "disable-all" ''
-                #!${lib.getExe pkgs.nushell}
-                let displays = (${lib.getExe pkgs.way-displays} -y -g | from yaml | get STATE | get HEADS | where CURRENT.ENABLED | get NAME)
-                $displays | save -f ${state}
-                $displays | each {|o| try { ${lib.getExe pkgs.way-displays} -s DISABLED $o } } | ignore
-              '';
-            enableAll =
-              state:
-              pkgs.writeScript "enable-all" ''
-                #!${lib.getExe pkgs.nushell}
-                open ${state} | lines | each {|o| try { ${lib.getExe pkgs.way-displays} -d DISABLED $o } } | ignore
-                rm ${state}
-              '';
+          [mode_floating]
+          label_color=${fg.normal}
+          label_select_color=${fg.faded}
+          label_font_size=20 75% 100
+          unselectable_bg_color=#0000
+          selectable_bg_color=${bg.normal}aa
+          selectable_border_color=${fg.faded}cc
 
-            displaysState = ''$"($env.XDG_RUNTIME_DIR)/idle-displays"'';
-            lockDisplaysState = ''$"($env.XDG_RUNTIME_DIR)/lock-idle-displays"'';
-          in
-          # As of 2025-04-30,
-          # `services.swayidle` doesn't accept paths for commands.
-          lib.mkIf cfg_.enable (
-            lib.mkMerge [
-              {
-                services.swayidle = {
-                  enable = true;
-                };
-                services.wayland-pipewire-idle-inhibit.enable = true;
-              }
-              (lib.mkIf cfg_.displays.enable {
-                services.swayidle.timeouts = [
-                  {
-                    timeout = cfg_.displays.timeout;
-                    command = builtins.toString (disableAll displaysState);
-                    resumeCommand = builtins.toString (enableAll displaysState);
-                  }
-                ];
-              })
-              (lib.mkIf cfg_.lock.enable (
-                lib.mkMerge [
-                  {
-                    services.swayidle = {
-                      events = [
-                        {
-                          event = "lock";
-                          command = lockCommand;
-                        }
-                      ];
-                      timeouts = [
-                        {
-                          timeout = cfg_.lock.timeout;
-                          command = lockCommand;
-                        }
-                      ];
-                    };
+          [mode_bisect]
+          label_color=${fg.normal}
+          label_font_size=20
+          label_padding=12
+          pointer_size=20
+          pointer_color=${fg.normal}
+          unselectable_bg_color=#0000
+          even_area_bg_color=${bg.normal}55
+          even_area_border_color=${fg.faded}cc
+          odd_area_bg_color=${bg.normal}55
+          odd_area_border_color=${fg.faded}cc
+          history_border_color=${fg.faded}cc
+        '';
+      }
 
-                    systemd.user.services.lock = {
-                      Unit = {
-                        Description = "lock user session";
-                        StartLimitIntervalSec = 0;
-                      };
-                      Service = {
-                        ExecStart = toString lockScript;
-                        Restart = "on-failure";
-                      };
-                    };
-                  }
-
-                  (lib.mkIf cfg_.lock.afterSleep {
-                    services.swayidle.events = [
-                      {
-                        event = "before-sleep";
-                        command = builtins.toString lockBeforeSleepScript;
-                      }
-                      {
-                        event = "after-resume";
-                        command = builtins.toString lockAfterSleepScript;
-                      }
-                    ];
-                  })
-                ]
-              ))
-              (lib.mkIf cfg_.suspend.enable {
-                services.swayidle.timeouts = [
-                  {
-                    timeout = cfg_.suspend.timeout;
-                    command = "${lib.getExe' pkgs.systemd "systemctl"} suspend";
-                  }
-                ];
-              })
-            ]
-          )
-        )
-
-        (
-          let
-            cfg_ = cfg.dictation;
-          in
-          lib.mkIf cfg_.enable {
-            services.whisp-away.enable = true;
-
-            systemd.user.services.whisp-away = {
-              Unit = {
-                Description = "whisp-away";
-                PartOf = config.wayland.systemd.target;
-                Requires = config.wayland.systemd.target;
-                After = config.wayland.systemd.target;
-                X-Restart-Triggers = [ config.xdg.configFile."whisp-away/config.json".source ];
-              };
-              Install = {
-                WantedBy = [ config.wayland.systemd.target ];
-              };
-              Service = {
-                Environment = "WHISPAWAY=${config.home.profileDirectory}/bin/whisp-away"; # WhispAway does not easily expose its package.
-                ExecStart = toString (pkgs.writeShellScript "dictation-exec" "$WHISPAWAY daemon");
-                Restart = "always";
-              };
-            };
-
-            wayland.windowManager.river.settings.map =
-              let
-                dictationBindings = {
-                  ${cfg_.binding} = lib.mkForce "spawn ${toggleDictation}";
-                };
-                toggleDictation = pkgs.writeScript "toggle-dictation" ''
-                  #!${lib.getExe pkgs.nushell}
-                  let state = $"($env.XDG_RUNTIME_DIR)/dictation"
-                  if ($state | path exists) {
-                    rm $state
-                    whisp-away stop
-                  } else {
-                    whisp-away start
-                    touch $state
-                  }
-                '';
-              in
-              builtins.listToAttrs (map (name: lib.nameValuePair name dictationBindings) modes)
-              // {
-                "-repeat" = builtins.listToAttrs (
-                  map (
-                    name:
-                    lib.nameValuePair name {
-                      ${cfg_.binding} = lib.mkForce null;
-                    }
-                  ) modes
-                );
-              };
-          }
-        )
-      ]
     ) userCfgs;
   };
 }
