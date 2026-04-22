@@ -85,112 +85,100 @@ in
           config.windowManager = {
             bindings =
               let
-                normalBindings =
-                  (
-                    let
-                      remoteCfg = config.shell.remote;
-                    in
-                    if remoteCfg.client.enable then
-                      {
-                        "Super+Control+Shift return".normal.command = "spawn 'mosh-window ${remoteCfg.address}'";
-                      }
-                    else
-                      { }
-                  )
-                  // {
-                    "Super+Shift return".normal.command = ''
-                      spawn 'shell-window --working-directory="${homeManagerConfig.home.homeDirectory}"'
-                    '';
-                    "Super o".normal.command = "spawn '${lib.getExe pkgs.rofi} -modi drun -show drun ${rofiArgs}'";
-                    "Super+Control c".normal.command = "close";
+                normalBindings = {
+                  "Super+Shift return".normal.command = ''
+                    spawn 'shell-window --working-directory="${homeManagerConfig.home.homeDirectory}"'
+                  '';
+                  "Super o".normal.command = "spawn '${lib.getExe pkgs.rofi} -modi drun -show drun ${rofiArgs}'";
+                  "Super+Control c".normal.command = "close";
 
-                    "Super return".normal.command = "zoom";
-                    "Super j".normal.command = "focus-view next";
-                    "Super k".normal.command = "focus-view previous";
-                    "Super+Shift j".normal.command = "swap next";
-                    "Super+Shift k".normal.command = "swap previous";
+                  "Super return".normal.command = "zoom";
+                  "Super j".normal.command = "focus-view next";
+                  "Super k".normal.command = "focus-view previous";
+                  "Super+Shift j".normal.command = "swap next";
+                  "Super+Shift k".normal.command = "swap previous";
 
-                    "Super b".normal.command = "focus-output previous";
-                    "Super n".normal.command = "focus-output next";
-                    "Super+Shift b".normal.command = "send-to-output previous";
-                    "Super+Shift n".normal.command = "send-to-output next";
+                  "Super b".normal.command = "focus-output previous";
+                  "Super n".normal.command = "focus-output next";
+                  "Super+Shift b".normal.command = "send-to-output previous";
+                  "Super+Shift n".normal.command = "send-to-output next";
 
-                    # `flow` does not currently support moving tags.
-                    "Super y".normal.command =
-                      "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32 --occupied'";
-                    "Super u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32 --occupied'";
-                    "Super+Control y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32'";
-                    "Super+Control u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32'";
-                    # "Super+Shift y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move previous 32'";
-                    # "Super+Shift u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move next 32'";
+                  # `flow` does not currently support moving tags.
+                  "Super y".normal.command =
+                    "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32 --occupied'";
+                  "Super u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32 --occupied'";
+                  "Super+Control y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32'";
+                  "Super+Control u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32'";
+                  # "Super+Shift y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move previous 32'";
+                  # "Super+Shift u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move next 32'";
 
-                    "Super bracketleft".normal.command = "focus-previous-tags";
-                    "Super bracketright".normal.command = "focus-previous-tags";
-                    "Super+Shift bracketleft".normal.command = "send-to-previous-tags";
-                    "Super+Shift bracketright".normal.command = "send-to-previous-tags";
+                  "Super bracketleft".normal.command = "focus-previous-tags";
+                  "Super bracketright".normal.command = "focus-previous-tags";
+                  "Super+Shift bracketleft".normal.command = "send-to-previous-tags";
+                  "Super+Shift bracketright".normal.command = "send-to-previous-tags";
+                }
+                // (builtins.mapAttrs
+                  (_: value: {
+                    normal = {
+                      command = value.normal.command;
+                      repeat = true;
+                    };
+                  })
+                  {
+                    "Super+Alt h".normal.command = "move left 10";
+                    "Super+Alt j".normal.command = "move down 10";
+                    "Super+Alt k".normal.command = "move up 10";
+                    "Super+Alt l".normal.command = "move right 10";
+
+                    "Super+Alt+Control h".normal.command = "move left 1";
+                    "Super+Alt+Control j".normal.command = "move down 1";
+                    "Super+Alt+Control k".normal.command = "move up 1";
+                    "Super+Alt+Control l".normal.command = "move right 1";
+
+                    "Super+Alt+Shift h".normal.command = "resize horizontal -10";
+                    "Super+Alt+Shift j".normal.command = "resize vertical 10";
+                    "Super+Alt+Shift k".normal.command = "resize vertical -10";
+                    "Super+Alt+Shift l".normal.command = "resize horizontal 10";
+
+                    "Super+Alt+Shift+Control h".normal.command = "resize horizontal -1";
+                    "Super+Alt+Shift+Control j".normal.command = "resize vertical 1";
+                    "Super+Alt+Shift+Control k".normal.command = "resize vertical -1";
+                    "Super+Alt+Shift+Control l".normal.command = "resize horizontal 1";
                   }
-                  // (builtins.mapAttrs
-                    (_: value: {
-                      normal = {
-                        command = value.normal.command;
-                        repeat = true;
-                      };
-                    })
-                    {
-                      "Super+Alt h".normal.command = "move left 10";
-                      "Super+Alt j".normal.command = "move down 10";
-                      "Super+Alt k".normal.command = "move up 10";
-                      "Super+Alt l".normal.command = "move right 10";
+                )
+                // {
+                  "Super+Alt left".normal.command = "snap left";
+                  "Super+Alt down".normal.command = "snap down";
+                  "Super+Alt up".normal.command = "snap up";
+                  "Super+Alt right".normal.command = "snap right";
 
-                      "Super+Alt+Control h".normal.command = "move left 1";
-                      "Super+Alt+Control j".normal.command = "move down 1";
-                      "Super+Alt+Control k".normal.command = "move up 1";
-                      "Super+Alt+Control l".normal.command = "move right 1";
+                  "Super h".normal.command = ''send-layout-cmd kile "mod-main-ratio -0.05"'';
+                  "Super l".normal.command = ''send-layout-cmd kile "mod-main-ratio +0.05"'';
+                  "Super+Shift h".normal.command = ''send-layout-cmd kile "mod-main-count +1"'';
+                  "Super+Shift l".normal.command = ''send-layout-cmd kile "mod-main-count -1"'';
+                  "Super+Control h".normal.command = ''send-layout-cmd kile "mod-main-index +1"'';
+                  "Super+Control l".normal.command = ''send-layout-cmd kile "mod-main-index -1"'';
+                  "Super semicolon".normal.command = "spawn ${layoutMenuScript}";
 
-                      "Super+Alt+Shift h".normal.command = "resize horizontal -10";
-                      "Super+Alt+Shift j".normal.command = "resize vertical 10";
-                      "Super+Alt+Shift k".normal.command = "resize vertical -10";
-                      "Super+Alt+Shift l".normal.command = "resize horizontal 10";
+                  "Super f".normal.command = "toggle-fullscreen";
+                  "Super space".normal.command = "toggle-float";
 
-                      "Super+Alt+Shift+Control h".normal.command = "resize horizontal -1";
-                      "Super+Alt+Shift+Control j".normal.command = "resize vertical 1";
-                      "Super+Alt+Shift+Control k".normal.command = "resize vertical -1";
-                      "Super+Alt+Shift+Control l".normal.command = "resize horizontal 1";
-                    }
-                  )
-                  // {
-                    "Super+Alt left".normal.command = "snap left";
-                    "Super+Alt down".normal.command = "snap down";
-                    "Super+Alt up".normal.command = "snap up";
-                    "Super+Alt right".normal.command = "snap right";
+                  "Super i".normal.command = rofimojiSpawn "";
+                  "Super+Shift i".normal.command = rofimojiSpawn "--files all";
+                  "Super+Control i".normal.command = rofimojiSpawn "--files math";
 
-                    "Super h".normal.command = ''send-layout-cmd kile "mod-main-ratio -0.05"'';
-                    "Super l".normal.command = ''send-layout-cmd kile "mod-main-ratio +0.05"'';
-                    "Super+Shift h".normal.command = ''send-layout-cmd kile "mod-main-count +1"'';
-                    "Super+Shift l".normal.command = ''send-layout-cmd kile "mod-main-count -1"'';
-                    "Super+Control h".normal.command = ''send-layout-cmd kile "mod-main-index +1"'';
-                    "Super+Control l".normal.command = ''send-layout-cmd kile "mod-main-index -1"'';
-                    "Super semicolon".normal.command = "spawn ${layoutMenuScript}";
+                  "Super p".normal.command = "spawn ${grimshotMenuScript}";
 
-                    "Super f".normal.command = "toggle-fullscreen";
-                    "Super space".normal.command = "toggle-float";
+                  "Super v".normal.command = "spawn ${setVolumeScript}";
+                  "Super+Shift v".normal.command = "spawn '${wpctl} set-mute @DEFAULT_AUDIO_SINK@ toggle'";
 
-                    "Super i".normal.command = rofimojiSpawn "";
-                    "Super+Shift i".normal.command = rofimojiSpawn "--files all";
-                    "Super+Control i".normal.command = rofimojiSpawn "--files math";
-
-                    "Super p".normal.command = "spawn ${grimshotMenuScript}";
-
-                    "Super v".normal.command = "spawn ${setVolumeScript}";
-                    "Super+Shift v".normal.command = "spawn '${wpctl} set-mute @DEFAULT_AUDIO_SINK@ toggle'";
-
-                    # We should not need to specify the config,
-                    # but as of 2024-04-29,
-                    # we do.
-                    "Super m".normal.command =
-                      "spawn '${lib.getExe pkgs.wl-kbptr} -c ${homeManagerConfig.xdg.configHome}/wl-kbptr/config -o modes=floating,click -o mode_floating.source=detect'";
-                    "Super+Shift m".normal.command = "enter-mode mouse";
-                  };
+                  # We should not need to specify the config,
+                  # but as of 2024-04-29,
+                  # we do.
+                  "Super m".normal.command =
+                    "spawn '${lib.getExe pkgs.wl-kbptr} -c ${homeManagerConfig.xdg.configHome}/wl-kbptr/config -o modes=floating,click -o mode_floating.source=detect'";
+                  "Super+Shift m".normal.command = "enter-mode mouse";
+                };
 
                 layoutMenuScript = pkgs.writeShellScript "grimshot-menu.sh" ''
                   function list_options {

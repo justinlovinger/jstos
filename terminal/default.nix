@@ -5,35 +5,80 @@
   ...
 }:
 let
+  moshWindow = pkgs.writeShellScriptBin "mosh-window" ''
+    exec ${lib.getExe terminalWindow} -e ${lib.getExe moshWrapped} "$@"
+  '';
+
+  # We cannot specify the full path to `zellij`,
+  # using `pkgs.zellij`,
+  # for the remote machine.
+  moshWrapped = pkgs.writeShellScriptBin "mosh" ''
+    exec ${lib.getExe' pkgs.mosh "mosh"} "$@" -- zellij
+  '';
+
+  shellWindow = pkgs.writeShellScriptBin "shell-window" ''
+    exec ${lib.getExe terminalWindow} "$@" -e ${lib.getExe pkgs.zellij}
+  '';
+
   terminalWindow = pkgs.writeShellScriptBin "terminal-window" ''
     ${lib.getExe' pkgs.foot "footclient"} -E "$@"
   '';
 
-  userCfgs = config.jstos.users;
+  userCfgs = lib.mapAttrs (_: cfg: cfg.terminal) config.jstos.users;
 in
 {
   options.jstos = {
     users = lib.mkOption {
       type = lib.types.attrsOf (
         lib.types.submodule (
-          { ... }:
+          { config, ... }:
+          let
+            remoteClientCfg = config.terminal.remote.client;
+          in
           {
-            options = {
-              terminal.enable = lib.mkEnableOption "terminal";
+            options.terminal = {
+              enable = lib.mkEnableOption "terminal";
 
-              shell.remote = {
-                client.enable = lib.mkEnableOption "remote shell client";
-                server.enable = lib.mkEnableOption "remote shell server";
+              remote = {
+                client = {
+                  enable = lib.mkEnableOption "remote shell client";
+                  binding = lib.mkOption {
+                    type = lib.types.nullOr lib.types.str;
+                    default = "Super+Control+Shift return";
+                    description = ''
+                      Binding to open remote client to the client address.
+                      Disable binding by setting to `null`.
+                    '';
+                  };
+                  address = lib.mkOption {
+                    type = lib.types.str;
+                    example = "255.255.255.255";
+                    description = ''
+                      Address of server for binding.
+                      Unneeded if binding is disabled.
+                    '';
+                  };
+                };
 
-                address = lib.mkOption {
-                  type = lib.types.str;
-                  example = "255.255.255.255";
+                server.enable = lib.mkOption {
+                  type = lib.types.bool;
+                  default = false;
+                  example = true;
                   description = ''
-                    Address of server.
+                    Whether to enable remote shell server.
+                    This can be enabled without enabling the terminal itself.
+                    For optimal results,
+                    use the same terminal configuration on client and server.
                   '';
                 };
               };
             };
+
+            config.windowManager.bindings =
+              lib.mkIf (remoteClientCfg.enable && remoteClientCfg.binding != null)
+                {
+                  ${remoteClientCfg.binding}.normal.command = "spawn '${moshWindow} ${remoteClientCfg.address}'";
+                };
           }
         )
       );
@@ -41,7 +86,7 @@ in
   };
 
   config = lib.mkMerge [
-    (lib.mkIf (lib.any (cfg: cfg.shell.remote.server.enable) (lib.attrValues userCfgs)) {
+    (lib.mkIf (lib.any (cfg: cfg.remote.server.enable) (lib.attrValues userCfgs)) {
       programs.mosh.enable = true;
       environment.sessionVariables.MOSH_SERVER_NETWORK_TMOUT = "1209600"; # 2 weeks
     })
@@ -56,70 +101,63 @@ in
           ...
         }:
         lib.mkMerge [
-          (lib.mkIf cfg.terminal.enable (
-            let
-              shellWindow = pkgs.writeShellScriptBin "shell-window" ''
-                exec ${lib.getExe terminalWindow} "$@" -e ${lib.getExe pkgs.zellij}
-              '';
-            in
-            {
-              home.packages = [
-                shellWindow
-                terminalWindow
-              ];
+          (lib.mkIf cfg.enable ({
+            home.packages = [
+              shellWindow
+              terminalWindow
+            ];
 
-              programs.foot = {
-                enable = true;
-                server.enable = true;
-                settings = {
-                  main.font = "monospace:size=14";
-                  scrollback.lines = 0;
-                  cursor.beam-thickness = 1;
-                  colors =
-                    with config.colors.hexWithoutHash;
-                    {
-                      foreground = fg.normal;
-                      background = bg.normal;
+            programs.foot = {
+              enable = true;
+              server.enable = true;
+              settings = {
+                main.font = "monospace:size=14";
+                scrollback.lines = 0;
+                cursor.beam-thickness = 1;
+                colors =
+                  with config.colors.hexWithoutHash;
+                  {
+                    foreground = fg.normal;
+                    background = bg.normal;
 
-                      selection-foreground = bg.normal;
-                      selection-background = fg.normal;
+                    selection-foreground = bg.normal;
+                    selection-background = fg.normal;
 
-                      cursor = "${bg.normal} ${fg.normal}";
+                    cursor = "${bg.normal} ${fg.normal}";
 
-                      regular0 = bg.normal;
-                      regular1 = fg.faded;
-                      regular2 = fg.faded;
-                      regular3 = fg.faded;
-                      regular4 = fg.faded;
-                      regular5 = fg.faded;
-                      regular6 = fg.faded;
-                      regular7 = fg.normal;
+                    regular0 = bg.normal;
+                    regular1 = fg.faded;
+                    regular2 = fg.faded;
+                    regular3 = fg.faded;
+                    regular4 = fg.faded;
+                    regular5 = fg.faded;
+                    regular6 = fg.faded;
+                    regular7 = fg.normal;
 
-                      bright0 = fg.gray;
-                      bright1 = fg.faded;
-                      bright2 = fg.faded;
-                      bright3 = fg.faded;
-                      bright4 = fg.faded;
-                      bright5 = fg.faded;
-                      bright6 = fg.faded;
-                      bright7 = fg.normal;
+                    bright0 = fg.gray;
+                    bright1 = fg.faded;
+                    bright2 = fg.faded;
+                    bright3 = fg.faded;
+                    bright4 = fg.faded;
+                    bright5 = fg.faded;
+                    bright6 = fg.faded;
+                    bright7 = fg.normal;
 
-                      dim0 = bg.normal;
-                      dim1 = bg.faded;
-                      dim2 = bg.faded;
-                      dim3 = bg.faded;
-                      dim4 = bg.faded;
-                      dim5 = bg.faded;
-                      dim6 = bg.faded;
-                      dim7 = bg.gray;
-                    }
-                    // lib.genAttrs (map builtins.toString (lib.lists.range 16 255)) (_: fg.faded);
-                };
+                    dim0 = bg.normal;
+                    dim1 = bg.faded;
+                    dim2 = bg.faded;
+                    dim3 = bg.faded;
+                    dim4 = bg.faded;
+                    dim5 = bg.faded;
+                    dim6 = bg.faded;
+                    dim7 = bg.gray;
+                  }
+                  // lib.genAttrs (map builtins.toString (lib.lists.range 16 255)) (_: fg.faded);
               };
-            }
-          ))
+            };
+          }))
 
-          (lib.mkIf (cfg.terminal.enable || cfg.shell.remote.server.enable) (
+          (lib.mkIf (cfg.enable || cfg.remote.server.enable) (
             let
               scrollbackConfigPath = "helix/scrollback-config.toml";
             in
@@ -221,26 +259,12 @@ in
             }
           ))
 
-          (lib.mkIf cfg.shell.remote.client.enable (
-            let
-              moshWindow = pkgs.writeShellScriptBin "mosh-window" ''
-                exec ${lib.getExe terminalWindow} -e ${lib.getExe moshWrapped} "$@"
-              '';
-
-              # We cannot specify the full path to `zellij`,
-              # using `pkgs.zellij`,
-              # for the remote machine.
-              moshWrapped = pkgs.writeShellScriptBin "mosh" ''
-                exec ${lib.getExe' pkgs.mosh "mosh"} "$@" -- zellij
-              '';
-            in
-            {
-              home.packages = [
-                moshWindow
-                moshWrapped
-              ];
-            }
-          ))
+          (lib.mkIf cfg.remote.client.enable ({
+            home.packages = [
+              moshWindow
+              moshWrapped
+            ];
+          }))
         ]
       ) userCfgs;
     }

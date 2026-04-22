@@ -6,7 +6,7 @@
   imports = [
     ./system.nix
     ./filesystems.nix
-    ./shell
+    ./terminal
     ./terminal-browser
     ./window-manager
     ./go-game
@@ -17,7 +17,7 @@
     default = { };
     example = {
       john = {
-        shell.enable = true;
+        terminal.enable = true;
         windowManager.enable = true;
       };
     };
