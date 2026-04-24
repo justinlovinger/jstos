@@ -16,7 +16,7 @@ in
   options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
-        { name, config, ... }:
+        { config, ... }:
         let
           cfg = config.desktop.osk;
         in
@@ -25,7 +25,6 @@ in
             enable = lib.mkOption {
               type = lib.types.bool;
               default = false;
-              example = "true";
               description = ''
                 Whether to enable the on-screen-keyboard.
               '';

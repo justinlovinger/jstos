@@ -17,7 +17,13 @@ in
         { name, config, ... }:
         {
           options.desktop.windowManager = {
-            enable = lib.mkEnableOption "Window Manager";
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = config.desktop.enable;
+              description = ''
+                Whether to enable the window manager.
+              '';
+            };
 
             bindings = lib.mkOption {
               type = lib.types.attrsOf (

@@ -7,7 +7,7 @@
   options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
-        { name, config, ... }:
+        { config, ... }:
         let
           cfg = config.desktop.toggleDisplay;
         in
@@ -15,8 +15,7 @@
           options.desktop.toggleDisplay = {
             enable = lib.mkOption {
               type = lib.types.bool;
-              default = false;
-              example = "true";
+              default = config.desktop.enable;
               description = ''
                 Whether to enable the toggle-display key.
               '';

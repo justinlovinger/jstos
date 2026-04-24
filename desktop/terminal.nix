@@ -37,7 +37,13 @@ in
           in
           {
             options.desktop.terminal = {
-              enable = lib.mkEnableOption "terminal";
+              enable = lib.mkOption {
+                type = lib.types.bool;
+                default = config.desktop.enable;
+                description = ''
+                  Whether to enable the terminal.
+                '';
+              };
 
               remote = {
                 client = {

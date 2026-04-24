@@ -16,7 +16,13 @@ in
         { name, config, ... }:
         {
           options.desktop.idle = {
-            enable = lib.mkEnableOption "idle timeouts";
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = config.desktop.enable;
+              description = ''
+                Whether to enable idle timeouts.
+              '';
+            };
 
             displays = {
               enable = lib.mkOption {

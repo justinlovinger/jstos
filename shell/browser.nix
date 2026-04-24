@@ -12,10 +12,16 @@ in
   options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
-        { ... }:
+        { config, ... }:
         {
           options.shell.browser = {
-            enable = lib.mkEnableOption "shell browser";
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = config.shell.enable;
+              description = ''
+                Whether to enable the shell browser.
+              '';
+            };
           };
         }
       )

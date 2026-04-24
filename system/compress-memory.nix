@@ -8,7 +8,13 @@ let
 in
 {
   options.jstos.system.compressMemory = {
-    enable = lib.mkEnableOption "compress memory";
+    enable = lib.mkOption {
+      type = lib.types.bool;
+      default = config.jstos.system.enable;
+      description = ''
+        Whether to compress memory.
+      '';
+    };
 
     memoryPercent = lib.mkOption {
       type = lib.types.ints.positive;

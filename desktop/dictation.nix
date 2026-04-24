@@ -19,7 +19,13 @@ in
         in
         {
           options.desktop.dictation = {
-            enable = lib.mkEnableOption "dictation";
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = false;
+              description = ''
+                Whether to enable dictation.
+              '';
+            };
 
             binding = lib.mkOption {
               type = lib.types.str;
