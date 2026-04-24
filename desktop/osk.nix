@@ -5,15 +5,11 @@
   ...
 }:
 let
-  toggleOsk = pkgs.writeScript "toggle-osk" ''
-    #!${lib.getExe pkgs.nushell}
-    ${lib.getExe' pkgs.coreutils "kill"} -SIGRTMIN (open ${oskState})
-  '';
   osk = "${lib.getExe' pkgs.wvkbd "wvkbd-deskintl"}";
   oskState = ''$"($env.XDG_RUNTIME_DIR)/osk"'';
 
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.windowManager.osk) config.jstos.users
+    lib.mapAttrs (_: cfg: cfg.desktop.osk) config.jstos.users
   );
 in
 {
@@ -21,8 +17,11 @@ in
     type = lib.types.attrsOf (
       lib.types.submodule (
         { name, config, ... }:
+        let
+          cfg = config.desktop.osk;
+        in
         {
-          options.windowManager.osk = {
+          options.desktop.osk = {
             enable = lib.mkOption {
               type = lib.types.bool;
               default = false;
@@ -37,6 +36,18 @@ in
               example = "None XF86AudioRaiseVolume";
               description = ''
                 Binding to toggle OSK.
+              '';
+            };
+
+            command = lib.mkOption {
+              type = lib.types.path;
+              readOnly = true;
+              default = pkgs.writeScript "toggle-osk" ''
+                #!${lib.getExe pkgs.nushell}
+                ${lib.getExe' pkgs.coreutils "kill"} -SIGRTMIN (open ${oskState})
+              '';
+              description = ''
+                Command to run when the binding is pressed.
               '';
             };
 
@@ -77,9 +88,9 @@ in
             };
           };
 
-          config.windowManager.bindings = lib.mkIf config.windowManager.osk.enable {
-            ${config.windowManager.osk.binding} = {
-              normal.command = "spawn ${toggleOsk}";
+          config.desktop.windowManager.bindings = lib.mkIf cfg.enable {
+            ${cfg.binding} = {
+              normal.command = "spawn ${cfg.command}";
               locked.enable = true;
             };
           };

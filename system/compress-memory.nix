@@ -4,20 +4,18 @@
   ...
 }:
 let
-  cfg = config.jstos.system;
+  cfg = config.jstos.system.compressMemory;
 in
 {
-  options.jstos.system = {
-    compressMemory = {
-      enable = lib.mkEnableOption "compress memory";
+  options.jstos.system.compressMemory = {
+    enable = lib.mkEnableOption "compress memory";
 
-      memoryPercent = lib.mkOption {
-        type = lib.types.ints.positive;
-        default = 66;
-        description = ''
-          Maximum amount of memory to use for compression.
-        '';
-      };
+    memoryPercent = lib.mkOption {
+      type = lib.types.ints.positive;
+      default = 66;
+      description = ''
+        Maximum amount of memory to use for compression.
+      '';
     };
   };
 
@@ -28,7 +26,7 @@ in
         # we won't need zram at all.
         useZram = config.swapDevices == [ ];
       in
-      lib.mkIf cfg.compressMemory.enable (
+      lib.mkIf cfg.enable (
         lib.mkMerge [
           (lib.mkIf useZram {
             zramSwap = {
@@ -39,7 +37,7 @@ in
               # in practice,
               # zram compresses at about a 3:1 ratio,
               # so we multiply the percent of memory to compress by 3.
-              memoryPercent = cfg.compressMemory.memoryPercent * 3;
+              memoryPercent = cfg.memoryPercent * 3;
             };
           })
           (lib.mkIf (!useZram) {
@@ -52,7 +50,7 @@ in
               "zswap.enabled=1"
               "zswap.compressor=zstd"
               "zswap.zpool=zsmalloc"
-              "zswap.max_pool_percent=${toString cfg.compressMemory.memoryPercent}"
+              "zswap.max_pool_percent=${toString cfg.memoryPercent}"
               "zswap.accept_threshold_percent=90"
               "zswap.shrinker_enabled=1"
             ];
@@ -70,7 +68,7 @@ in
               enabled = true;
               compressor = "zstd";
               zpool = "zsmalloc";
-              max_pool_percent = cfg.compressMemory.memoryPercent;
+              max_pool_percent = cfg.memoryPercent;
               accept_threshold_percent = 90;
               shrinker_enabled = true;
             };

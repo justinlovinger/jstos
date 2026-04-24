@@ -5,20 +5,8 @@
   ...
 }:
 let
-  toggleDictation = pkgs.writeScript "toggle-dictation" ''
-    #!${lib.getExe pkgs.nushell}
-    let state = $"($env.XDG_RUNTIME_DIR)/dictation"
-    if ($state | path exists) {
-      rm $state
-      whisp-away stop
-    } else {
-      whisp-away start
-      touch $state
-    }
-  '';
-
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.windowManager.dictation) config.jstos.users
+    lib.mapAttrs (_: cfg: cfg.desktop.dictation) config.jstos.users
   );
 in
 {
@@ -26,8 +14,11 @@ in
     type = lib.types.attrsOf (
       lib.types.submodule (
         { name, config, ... }:
+        let
+          cfg = config.desktop.dictation;
+        in
         {
-          options.windowManager.dictation = {
+          options.desktop.dictation = {
             enable = lib.mkEnableOption "dictation";
 
             binding = lib.mkOption {
@@ -37,10 +28,29 @@ in
                 Binding to use dictation.
               '';
             };
+
+            command = lib.mkOption {
+              type = lib.types.path;
+              readOnly = true;
+              default = pkgs.writeScript "toggle-dictation" ''
+                #!${lib.getExe pkgs.nushell}
+                let state = $"($env.XDG_RUNTIME_DIR)/dictation"
+                if ($state | path exists) {
+                  rm $state
+                  whisp-away stop
+                } else {
+                  whisp-away start
+                  touch $state
+                }
+              '';
+              description = ''
+                Command to run when the binding is pressed.
+              '';
+            };
           };
 
-          config.windowManager.bindings = lib.mkIf config.windowManager.dictation.enable {
-            ${config.windowManager.dictation.binding}.normal.command = "spawn ${toggleDictation}";
+          config.desktop.windowManager.bindings = lib.mkIf cfg.enable {
+            ${cfg.binding}.normal.command = "spawn ${cfg.command}";
           };
         }
       )

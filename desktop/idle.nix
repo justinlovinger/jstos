@@ -6,7 +6,7 @@
 }:
 let
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.windowManager.idle) config.jstos.users
+    lib.mapAttrs (_: cfg: cfg.desktop.idle) config.jstos.users
   );
 in
 {
@@ -15,7 +15,7 @@ in
       lib.types.submodule (
         { name, config, ... }:
         {
-          options.windowManager.idle = {
+          options.desktop.idle = {
             enable = lib.mkEnableOption "idle timeouts";
 
             displays = {
@@ -41,7 +41,7 @@ in
 
               timeout = lib.mkOption {
                 type = lib.types.int;
-                default = config.windowManager.idle.displays.timeout + 15;
+                default = config.desktop.idle.displays.timeout + 15;
                 description = ''
                   Idle seconds before session is locked.
                 '';
@@ -118,14 +118,13 @@ in
 
               timeout = lib.mkOption {
                 type = lib.types.int;
-                default = config.windowManager.idle.displays.timeout + 30;
+                default = config.desktop.idle.displays.timeout + 30;
                 description = ''
                   Idle seconds before machine suspends.
                 '';
               };
             };
           };
-
         }
       )
     );

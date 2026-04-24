@@ -24,7 +24,7 @@ let
     ${lib.getExe' pkgs.foot "footclient"} -E "$@"
   '';
 
-  userCfgs = lib.mapAttrs (_: cfg: cfg.terminal) config.jstos.users;
+  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.terminal) config.jstos.users;
 in
 {
   options.jstos = {
@@ -33,10 +33,10 @@ in
         lib.types.submodule (
           { config, ... }:
           let
-            remoteClientCfg = config.terminal.remote.client;
+            remoteClientCfg = config.desktop.terminal.remote.client;
           in
           {
-            options.terminal = {
+            options.desktop.terminal = {
               enable = lib.mkEnableOption "terminal";
 
               remote = {
@@ -74,7 +74,7 @@ in
               };
             };
 
-            config.windowManager.bindings =
+            config.desktop.windowManager.bindings =
               lib.mkIf (remoteClientCfg.enable && remoteClientCfg.binding != null)
                 {
                   ${remoteClientCfg.binding}.normal.command = "spawn '${moshWindow} ${remoteClientCfg.address}'";

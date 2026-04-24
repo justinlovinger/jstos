@@ -1,0 +1,6 @@
+{ ... }:
+{
+  imports = [
+    ./compress-memory.nix
+  ];
+}

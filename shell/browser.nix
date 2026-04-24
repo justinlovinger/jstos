@@ -5,7 +5,7 @@
 }:
 let
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.terminalBrowser) config.jstos.users
+    lib.mapAttrs (_: cfg: cfg.shell.browser) config.jstos.users
   );
 in
 {
@@ -14,8 +14,8 @@ in
       lib.types.submodule (
         { ... }:
         {
-          options.terminalBrowser = {
-            enable = lib.mkEnableOption "terminal-browser";
+          options.shell.browser = {
+            enable = lib.mkEnableOption "shell browser";
           };
         }
       )

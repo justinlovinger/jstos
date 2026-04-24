@@ -4,12 +4,11 @@
 }:
 {
   imports = [
-    ./system.nix
+    ./desktop
     ./filesystems.nix
-    ./terminal
-    ./terminal-browser
-    ./window-manager
     ./go-game
+    ./shell
+    ./system
   ];
 
   options.jstos.users = lib.mkOption {
@@ -17,8 +16,10 @@
     default = { };
     example = {
       john = {
-        terminal.enable = true;
-        windowManager.enable = true;
+        desktop = {
+          windowManager.enable = true;
+          terminal.enable = true;
+        };
       };
     };
     description = "Mapping of users to JstOS options.";

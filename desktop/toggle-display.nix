@@ -9,30 +9,10 @@
       lib.types.submodule (
         { name, config, ... }:
         let
-          toggleDisplay = pkgs.writeScript "toggle-display" ''
-            #!${lib.getExe pkgs.nushell}
-            if (${lib.getExe pkgs.way-displays} -y -g | from yaml | get STATE | get HEADS | where NAME == ${cfg.name} | get 0 | get CURRENT | get ENABLED) {
-              ${lib.getExe pkgs.way-displays} -s DISABLED ${cfg.name}
-              ${
-                if cfg.disableTouch.enable then
-                  "${lib.getExe' pkgs.river "riverctl"} input ${cfg.disableTouch.input} events disabled"
-                else
-                  ""
-              }
-            } else {
-              ${lib.getExe pkgs.way-displays} -d DISABLED ${cfg.name}
-              ${
-                if cfg.disableTouch.enable then
-                  "${lib.getExe' pkgs.river "riverctl"} input ${cfg.disableTouch.input} events enabled"
-                else
-                  ""
-              }
-            }
-          '';
-          cfg = config.windowManager.toggleDisplay;
+          cfg = config.desktop.toggleDisplay;
         in
         {
-          options.windowManager.toggleDisplay = {
+          options.desktop.toggleDisplay = {
             enable = lib.mkOption {
               type = lib.types.bool;
               default = false;
@@ -47,6 +27,34 @@
               example = "None XF86AudioRaiseVolume";
               description = ''
                 Binding to toggle display.
+              '';
+            };
+
+            command = lib.mkOption {
+              type = lib.types.path;
+              readOnly = true;
+              default = pkgs.writeScript "toggle-display" ''
+                #!${lib.getExe pkgs.nushell}
+                if (${lib.getExe pkgs.way-displays} -y -g | from yaml | get STATE | get HEADS | where NAME == ${cfg.name} | get 0 | get CURRENT | get ENABLED) {
+                  ${lib.getExe pkgs.way-displays} -s DISABLED ${cfg.name}
+                  ${
+                    if cfg.disableTouch.enable then
+                      "${lib.getExe' pkgs.river "riverctl"} input ${cfg.disableTouch.input} events disabled"
+                    else
+                      ""
+                  }
+                } else {
+                  ${lib.getExe pkgs.way-displays} -d DISABLED ${cfg.name}
+                  ${
+                    if cfg.disableTouch.enable then
+                      "${lib.getExe' pkgs.river "riverctl"} input ${cfg.disableTouch.input} events enabled"
+                    else
+                      ""
+                  }
+                }
+              '';
+              description = ''
+                Command to run when the binding is pressed.
               '';
             };
 
@@ -81,9 +89,9 @@
             };
           };
 
-          config.windowManager.bindings = lib.mkIf cfg.enable {
+          config.desktop.windowManager.bindings = lib.mkIf cfg.enable {
             ${cfg.binding} = {
-              normal.command = "spawn ${toggleDisplay}";
+              normal.command = "spawn ${cfg.command}";
               locked.enable = true;
             };
           };

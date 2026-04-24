@@ -6,24 +6,17 @@
 }:
 let
   userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.windowManager) config.jstos.users
+    lib.mapAttrs (_: cfg: cfg.desktop.windowManager) config.jstos.users
   );
   config' = config;
 in
 {
-  imports = [
-    ./dictation.nix
-    ./idle.nix
-    ./osk.nix
-    ./toggle-display.nix
-  ];
-
   options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
         { name, config, ... }:
         {
-          options.windowManager = {
+          options.desktop.windowManager = {
             enable = lib.mkEnableOption "Window Manager";
 
             bindings = lib.mkOption {
@@ -82,7 +75,7 @@ in
             };
           };
 
-          config.windowManager = {
+          config.desktop.windowManager = {
             bindings =
               let
                 normalBindings = {
