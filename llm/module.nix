@@ -124,19 +124,21 @@ in
           config.llm = {
             defaultModel = lib.mkIf config.llm.openrouter.enable {
               provider = lib.mkDefault "openrouter";
-              model = lib.mkDefault "deepseek/deepseek-v3.2";
+              model = lib.mkDefault "deepseek/deepseek-v4-flash";
             };
 
             openrouter.models = {
-              "deepseek/deepseek-v3.2" = {
-                max_input_tokens = 163840;
+              "deepseek/deepseek-v4-flash" = {
+                max_input_tokens = 1048576;
                 supports_reasoning = true;
                 supports_function_calling = true;
                 patch.body.reasoning.enabled = lib.mkDefault true;
               };
-              "deepseek/deepseek-v3.2-speciale" = {
-                max_input_tokens = 163840;
+              "deepseek/deepseek-v4-pro" = {
+                max_input_tokens = 1048576;
                 supports_reasoning = true;
+                supports_function_calling = true;
+                patch.body.reasoning.enabled = lib.mkDefault true;
               };
             };
           };
