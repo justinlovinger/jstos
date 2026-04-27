@@ -6,6 +6,7 @@
 {
   imports = [
     ./memory.nix
+    ./ssh.nix
   ];
 
   options.jstos.system.enable = lib.mkOption {
