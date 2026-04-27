@@ -9,10 +9,10 @@
       lib.types.submodule (
         { config, ... }:
         let
-          cfg = config.desktop.toggleDisplay;
+          cfg = config.desktop.displayToggle;
         in
         {
-          options.desktop.toggleDisplay = {
+          options.desktop.displayToggle = {
             enable = lib.mkOption {
               type = lib.types.bool;
               default = config.desktop.enable;

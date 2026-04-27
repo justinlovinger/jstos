@@ -4,10 +4,10 @@
   ...
 }:
 let
-  cfg = config.jstos.system.compressMemory;
+  cfg = config.jstos.system.memory.compression;
 in
 {
-  options.jstos.system.compressMemory = {
+  options.jstos.system.memory.compression = {
     enable = lib.mkOption {
       type = lib.types.bool;
       default = config.jstos.system.enable;
@@ -16,11 +16,11 @@ in
       '';
     };
 
-    memoryPercent = lib.mkOption {
+    percent = lib.mkOption {
       type = lib.types.ints.positive;
       default = 66;
       description = ''
-        Maximum amount of memory to use for compression.
+        Maximum percent of memory to use for compression.
       '';
     };
   };
@@ -43,7 +43,7 @@ in
               # in practice,
               # zram compresses at about a 3:1 ratio,
               # so we multiply the percent of memory to compress by 3.
-              memoryPercent = cfg.memoryPercent * 3;
+              memoryPercent = cfg.percent * 3;
             };
           })
           (lib.mkIf (!useZram) {
@@ -56,7 +56,7 @@ in
               "zswap.enabled=1"
               "zswap.compressor=zstd"
               "zswap.zpool=zsmalloc"
-              "zswap.max_pool_percent=${toString cfg.memoryPercent}"
+              "zswap.max_pool_percent=${toString cfg.percent}"
               "zswap.accept_threshold_percent=90"
               "zswap.shrinker_enabled=1"
             ];
@@ -74,7 +74,7 @@ in
               enabled = true;
               compressor = "zstd";
               zpool = "zsmalloc";
-              max_pool_percent = cfg.memoryPercent;
+              max_pool_percent = cfg.percent;
               accept_threshold_percent = 90;
               shrinker_enabled = true;
             };

@@ -5,7 +5,7 @@
 }:
 {
   imports = [
-    ./compress-memory.nix
+    ./memory.nix
   ];
 
   options.jstos.system.enable = lib.mkOption {

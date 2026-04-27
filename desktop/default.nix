@@ -7,7 +7,7 @@
     ./dictation.nix
     ./idle.nix
     ./osk.nix
-    ./toggle-display.nix
+    ./display-toggle.nix
     ./window-manager.nix
     ./terminal.nix
   ];
