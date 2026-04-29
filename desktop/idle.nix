@@ -5,9 +5,7 @@
   ...
 }:
 let
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.desktop.idle) config.jstos.users
-  );
+  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.idle) config.jstos.users;
 in
 {
   options.jstos.users = lib.mkOption {
@@ -196,79 +194,78 @@ in
         displaysState = ''$"($env.XDG_RUNTIME_DIR)/idle-displays"'';
         lockDisplaysState = ''$"($env.XDG_RUNTIME_DIR)/lock-idle-displays"'';
       in
-      # As of 2025-04-30,
-      # `services.swayidle` doesn't accept paths for commands.
-      lib.mkIf cfg.enable (
-        lib.mkMerge [
-          {
-            services.swayidle = {
-              enable = true;
-            };
-            services.wayland-pipewire-idle-inhibit.enable = true;
-          }
-          (lib.mkIf cfg.displays.enable {
-            services.swayidle.timeouts = [
-              {
-                timeout = cfg.displays.timeout;
-                command = builtins.toString (disableAll displaysState);
-                resumeCommand = builtins.toString (enableAll displaysState);
-              }
-            ];
-          })
-          (lib.mkIf cfg.lock.enable (
-            lib.mkMerge [
-              {
-                services.swayidle = {
-                  events = [
-                    {
-                      event = "lock";
-                      command = lockCommand;
-                    }
-                  ];
-                  timeouts = [
-                    {
-                      timeout = cfg.lock.timeout;
-                      command = lockCommand;
-                    }
-                  ];
-                };
+      lib.mkMerge [
+        {
+          services.swayidle = {
+            enable = true;
+          };
+          services.wayland-pipewire-idle-inhibit.enable = true;
+        }
 
-                systemd.user.services.lock = {
-                  Unit = {
-                    Description = "lock user session";
-                    StartLimitIntervalSec = 0;
-                  };
-                  Service = {
-                    ExecStart = toString lockScript;
-                    Restart = "on-failure";
-                  };
-                };
-              }
+        (lib.mkIf cfg.displays.enable {
+          services.swayidle.timeouts = [
+            {
+              timeout = cfg.displays.timeout;
+              command = builtins.toString (disableAll displaysState);
+              resumeCommand = builtins.toString (enableAll displaysState);
+            }
+          ];
+        })
 
-              (lib.mkIf cfg.lock.afterSleep {
-                services.swayidle.events = [
+        (lib.mkIf cfg.lock.enable (
+          lib.mkMerge [
+            {
+              services.swayidle = {
+                events = [
                   {
-                    event = "before-sleep";
-                    command = builtins.toString lockBeforeSleepScript;
-                  }
-                  {
-                    event = "after-resume";
-                    command = builtins.toString lockAfterSleepScript;
+                    event = "lock";
+                    command = lockCommand;
                   }
                 ];
-              })
-            ]
-          ))
-          (lib.mkIf cfg.suspend.enable {
-            services.swayidle.timeouts = [
-              {
-                timeout = cfg.suspend.timeout;
-                command = "${lib.getExe' pkgs.systemd "systemctl"} suspend";
-              }
-            ];
-          })
-        ]
-      )
-    ) userCfgs;
+                timeouts = [
+                  {
+                    timeout = cfg.lock.timeout;
+                    command = lockCommand;
+                  }
+                ];
+              };
+
+              systemd.user.services.lock = {
+                Unit = {
+                  Description = "lock user session";
+                  StartLimitIntervalSec = 0;
+                };
+                Service = {
+                  ExecStart = toString lockScript;
+                  Restart = "on-failure";
+                };
+              };
+            }
+
+            (lib.mkIf cfg.lock.afterSleep {
+              services.swayidle.events = [
+                {
+                  event = "before-sleep";
+                  command = builtins.toString lockBeforeSleepScript;
+                }
+                {
+                  event = "after-resume";
+                  command = builtins.toString lockAfterSleepScript;
+                }
+              ];
+            })
+          ]
+        ))
+
+        (lib.mkIf cfg.suspend.enable {
+          services.swayidle.timeouts = [
+            {
+              timeout = cfg.suspend.timeout;
+              command = "${lib.getExe' pkgs.systemd "systemctl"} suspend";
+            }
+          ];
+        })
+      ]
+    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
   };
 }

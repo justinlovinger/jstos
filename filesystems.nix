@@ -5,11 +5,8 @@
   ...
 }:
 let
-  syncCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.sync) userCfgs);
-  snapshotCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.snapshot) userCfgs);
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.filesystems.data) config.jstos.users
-  );
+  syncCfgs = lib.mapAttrs (_: cfg: cfg.filesystems.data.sync) config.jstos.users;
+  snapshotCfgs = lib.mapAttrs (_: cfg: cfg.filesystems.data.snapshot) config.jstos.users;
 in
 {
   options.jstos.users = lib.mkOption {
@@ -18,8 +15,6 @@ in
         { name, ... }:
         {
           options.filesystems.data = {
-            enable = lib.mkEnableOption "data";
-
             sync = {
               enable = lib.mkOption {
                 type = lib.types.bool;
@@ -39,7 +34,14 @@ in
             };
 
             snapshot = {
-              enable = lib.mkEnableOption "snapshot data";
+              enable = lib.mkOption {
+                type = lib.types.bool;
+                default = false;
+                description = ''
+                  Whether to take periodic snapshots
+                  of the data filesystem.
+                '';
+              };
               root = lib.mkOption {
                 type = lib.types.str;
                 default = "/home/${name}/data";
@@ -55,7 +57,7 @@ in
   };
 
   config = lib.mkMerge [
-    (lib.mkIf (syncCfgs != { }) {
+    (lib.mkIf (builtins.any (cfg: cfg.enable) (builtins.attrValues syncCfgs)) {
       # Unison needs many inotify watches.
       boot.kernel.sysctl."fs.inotify.max_user_watches" = "2147483647";
 
@@ -178,9 +180,10 @@ in
               };
           };
         }
-      ) syncCfgs;
+      ) (lib.filterAttrs (_: cfg: cfg.enable) syncCfgs);
     })
-    (lib.mkIf (snapshotCfgs != { }) {
+
+    (lib.mkIf (builtins.any (cfg: cfg.enable) (builtins.attrValues snapshotCfgs)) {
       services.snapper = {
         configs = lib.mapAttrs' (
           user: cfg:
@@ -196,7 +199,7 @@ in
             TIMELINE_LIMIT_MONTHLY = 6;
             TIMELINE_LIMIT_YEARLY = 0;
           }
-        ) snapshotCfgs;
+        ) (lib.filterAttrs (_: cfg: cfg.enable) snapshotCfgs);
         snapshotInterval = "*:0/5";
       };
 

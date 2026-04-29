@@ -5,9 +5,7 @@
   ...
 }:
 let
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.desktop.dictation) config.jstos.users
-  );
+  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.dictation) config.jstos.users;
 in
 {
   options.jstos.users = lib.mkOption {
@@ -72,7 +70,7 @@ in
         pkgs,
         ...
       }:
-      lib.mkIf cfg.enable {
+      {
         services.whisp-away.enable = true;
 
         systemd.user.services.whisp-away = {
@@ -93,6 +91,6 @@ in
           };
         };
       }
-    ) userCfgs;
+    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
   };
 }

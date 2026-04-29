@@ -5,9 +5,7 @@
   ...
 }:
 let
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.desktop.windowManager) config.jstos.users
-  );
+  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.windowManager) config.jstos.users;
   config' = config;
 in
 {
@@ -621,7 +619,6 @@ in
           history_border_color=${fg.faded}cc
         '';
       }
-
-    ) userCfgs;
+    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
   };
 }

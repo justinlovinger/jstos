@@ -8,9 +8,7 @@ let
   osk = "${lib.getExe' pkgs.wvkbd "wvkbd-deskintl"}";
   oskState = ''$"($env.XDG_RUNTIME_DIR)/osk"'';
 
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.desktop.osk) config.jstos.users
-  );
+  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.osk) config.jstos.users;
 in
 {
   options.jstos.users = lib.mkOption {
@@ -107,7 +105,7 @@ in
         pkgs,
         ...
       }:
-      lib.mkIf cfg.enable {
+      {
         systemd.user.services.osk = {
           Unit = {
             Description = "On-Screen-Keyboard Daemon";
@@ -144,6 +142,6 @@ in
           };
         };
       }
-    ) userCfgs;
+    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
   };
 }

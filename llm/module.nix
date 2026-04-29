@@ -5,7 +5,7 @@
   ...
 }:
 let
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (lib.mapAttrs (_: cfg: cfg.llm) config.jstos.users);
+  userCfgs = lib.mapAttrs (_: cfg: cfg.llm) config.jstos.users;
 
   modelsOption = lib.mkOption {
     type = lib.types.attrsOf (
@@ -148,7 +148,7 @@ in
   };
 
   config = {
-    services.ollama.enable = lib.any (cfg: cfg.local.enable) (lib.attrValues userCfgs);
+    services.ollama.enable = lib.any (cfg: cfg.enable && cfg.local.enable) (lib.attrValues userCfgs);
 
     home-manager.users = lib.mapAttrs (
       user: cfg:
@@ -282,6 +282,6 @@ in
             };
         };
       }
-    ) userCfgs;
+    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
   };
 }

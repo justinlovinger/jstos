@@ -5,9 +5,7 @@
   ...
 }:
 let
-  userCfgs = lib.filterAttrs (_: cfg: cfg.enable) (
-    lib.mapAttrs (_: cfg: cfg.goGame) config.jstos.users
-  );
+  userCfgs = lib.mapAttrs (_: cfg: cfg.goGame) config.jstos.users;
 
   katagoSettingsFormat = {
     generate =
@@ -380,6 +378,6 @@ in
           }
         )
       ]
-    ) userCfgs;
+    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
   };
 }
