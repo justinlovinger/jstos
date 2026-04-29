@@ -5,11 +5,12 @@
 {
   imports = [
     ./dictation.nix
-    ./idle.nix
-    ./osk.nix
     ./display-toggle.nix
-    ./window-manager.nix
+    ./idle.nix
+    ./map.nix
+    ./osk.nix
     ./terminal.nix
+    ./window-manager.nix
   ];
 
   options.jstos.users = lib.mkOption {
