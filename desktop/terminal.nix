@@ -25,68 +25,66 @@ let
   '';
 in
 {
-  options.jstos = {
-    users = lib.mkOption {
-      type = lib.types.attrsOf (
-        lib.types.submodule (
-          { config, ... }:
-          let
-            remoteClientCfg = config.desktop.terminal.remote.client;
-          in
-          {
-            options.desktop.terminal = {
-              enable = lib.mkOption {
-                type = lib.types.bool;
-                default = config.desktop.enable;
-                description = ''
-                  Whether to enable the terminal.
-                '';
-              };
+  options.jstos.users = lib.mkOption {
+    type = lib.types.attrsOf (
+      lib.types.submodule (
+        { config, ... }:
+        let
+          remoteClientCfg = config.desktop.terminal.remote.client;
+        in
+        {
+          options.desktop.terminal = {
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = config.desktop.enable;
+              description = ''
+                Whether to enable the terminal.
+              '';
+            };
 
-              remote = {
-                client = {
-                  enable = lib.mkEnableOption "remote shell client";
-                  binding = lib.mkOption {
-                    type = lib.types.nullOr lib.types.str;
-                    default = "Super+Control+Shift return";
-                    description = ''
-                      Binding to open remote client to the client address.
-                      Disable binding by setting to `null`.
-                    '';
-                  };
-                  address = lib.mkOption {
-                    type = lib.types.str;
-                    example = "255.255.255.255";
-                    description = ''
-                      Address of server for binding.
-                      Unneeded if binding is disabled.
-                    '';
-                  };
-                };
-
-                server.enable = lib.mkOption {
-                  type = lib.types.bool;
-                  default = false;
-                  example = true;
+            remote = {
+              client = {
+                enable = lib.mkEnableOption "remote shell client";
+                binding = lib.mkOption {
+                  type = lib.types.nullOr lib.types.str;
+                  default = "Super+Control+Shift return";
                   description = ''
-                    Whether to enable remote shell server.
-                    This can be enabled without enabling the terminal itself.
-                    For optimal results,
-                    use the same terminal configuration on client and server.
+                    Binding to open remote client to the client address.
+                    Disable binding by setting to `null`.
+                  '';
+                };
+                address = lib.mkOption {
+                  type = lib.types.str;
+                  example = "255.255.255.255";
+                  description = ''
+                    Address of server for binding.
+                    Unneeded if binding is disabled.
                   '';
                 };
               };
-            };
 
-            config.desktop.windowManager.bindings =
-              lib.mkIf (remoteClientCfg.enable && remoteClientCfg.binding != null)
-                {
-                  ${remoteClientCfg.binding}.normal.command = "spawn '${moshWindow} ${remoteClientCfg.address}'";
-                };
-          }
-        )
-      );
-    };
+              server.enable = lib.mkOption {
+                type = lib.types.bool;
+                default = false;
+                example = true;
+                description = ''
+                  Whether to enable remote shell server.
+                  This can be enabled without enabling the terminal itself.
+                  For optimal results,
+                  use the same terminal configuration on client and server.
+                '';
+              };
+            };
+          };
+
+          config.desktop.windowManager.bindings =
+            lib.mkIf (remoteClientCfg.enable && remoteClientCfg.binding != null)
+              {
+                ${remoteClientCfg.binding}.normal.command = "spawn '${moshWindow} ${remoteClientCfg.address}'";
+              };
+        }
+      )
+    );
   };
 
   config = lib.mkMerge [
