@@ -5,7 +5,6 @@
   ...
 }:
 let
-  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.windowManager) config.jstos.users;
   config' = config;
 in
 {
@@ -381,14 +380,16 @@ in
   };
 
   config = {
-    programs.river-classic = lib.mkIf (lib.any (cfg: cfg.enable) (lib.attrValues userCfgs)) {
-      enable = lib.mkDefault true;
-      package = lib.mkDefault null;
-      extraPackages = lib.mkDefault [ ];
-    };
+    programs.river-classic =
+      lib.mkIf (lib.any (cfg: cfg.desktop.windowManager.enable) (lib.attrValues config.jstos.users))
+        {
+          enable = lib.mkDefault true;
+          package = lib.mkDefault null;
+          extraPackages = lib.mkDefault [ ];
+        };
 
     home-manager.users = lib.mapAttrs (
-      user: cfg:
+      user: cfg':
       {
         config,
         lib,
@@ -396,6 +397,7 @@ in
         ...
       }:
       let
+        cfg = cfg'.desktop.windowManager;
         riverColor = s: "0x${s}";
       in
       {
@@ -403,7 +405,7 @@ in
 
         programs.i3bar-river = {
           enable = true;
-          settings = with config.colors.hex; {
+          settings = with cfg'.colors.hex; {
             command = toString (lib.getExe config.programs.i3status.package);
 
             background = bg.normal;
@@ -450,7 +452,7 @@ in
 
         services.mako = {
           enable = true;
-          settings = with config.colors.hex; {
+          settings = with cfg'.colors.hex; {
             font = "monospace 14";
             background-color = bg.normal;
             text-color = fg.normal;
@@ -473,7 +475,7 @@ in
           enable = true;
 
           settings =
-            with config.colors.hexWithoutHash;
+            with cfg'.colors.hexWithoutHash;
             {
               attach-mode = "top";
 
@@ -589,7 +591,7 @@ in
           };
         };
 
-        xdg.configFile."wl-kbptr/config".text = with config.colors.hex; ''
+        xdg.configFile."wl-kbptr/config".text = with cfg'.colors.hex; ''
           [mode_tile]
           label_color=${fg.normal}
           label_select_color=${fg.faded}cc
@@ -619,6 +621,6 @@ in
           history_border_color=${fg.faded}cc
         '';
       }
-    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
+    ) (lib.filterAttrs (_: cfg: cfg.desktop.windowManager.enable) config.jstos.users);
   };
 }

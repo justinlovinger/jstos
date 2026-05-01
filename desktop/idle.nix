@@ -11,7 +11,7 @@ in
   options.jstos.users = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule (
-        { name, config, ... }:
+        { config, ... }:
         {
           options.desktop.idle = {
             enable = lib.mkOption {
@@ -62,13 +62,12 @@ in
               command = lib.mkOption {
                 type = lib.types.str;
                 default =
-                  with config.home-manager.users.${name}.colors.hexWithoutHash;
+                  with config.colors.hexWithoutHash;
                   lib.concatStringsSep " " [
                     "${lib.getExe pkgs.swaylock}"
 
                     "--indicator-radius 100"
 
-                    # Use system colors.
                     "--color ${bg.normal}"
 
                     "--key-hl-color ${fg.normal}"

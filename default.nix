@@ -5,6 +5,7 @@
 }:
 {
   imports = [
+    ./colors.nix
     ./desktop
     ./filesystems.nix
     ./go-game

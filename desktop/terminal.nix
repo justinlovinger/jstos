@@ -23,8 +23,6 @@ let
   terminalWindow = pkgs.writeShellScriptBin "terminal-window" ''
     ${lib.getExe' pkgs.foot "footclient"} -E "$@"
   '';
-
-  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.terminal) config.jstos.users;
 in
 {
   options.jstos = {
@@ -92,20 +90,26 @@ in
   };
 
   config = lib.mkMerge [
-    (lib.mkIf (lib.any (cfg: cfg.remote.server.enable) (lib.attrValues userCfgs)) {
-      programs.mosh.enable = true;
-      environment.sessionVariables.MOSH_SERVER_NETWORK_TMOUT = "1209600"; # 2 weeks
-    })
+    (lib.mkIf
+      (lib.any (cfg: cfg.desktop.terminal.remote.server.enable) (lib.attrValues config.jstos.users))
+      {
+        programs.mosh.enable = true;
+        environment.sessionVariables.MOSH_SERVER_NETWORK_TMOUT = "1209600"; # 2 weeks
+      }
+    )
 
     {
       home-manager.users = lib.mapAttrs (
-        user: cfg:
+        user: cfg':
         {
           config,
           lib,
           pkgs,
           ...
         }:
+        let
+          cfg = cfg'.desktop.terminal;
+        in
         lib.mkMerge [
           (lib.mkIf cfg.enable ({
             home.packages = [
@@ -121,7 +125,7 @@ in
                 scrollback.lines = 0;
                 cursor.beam-thickness = 1;
                 colors =
-                  with config.colors.hexWithoutHash;
+                  with cfg'.colors.hexWithoutHash;
                   {
                     foreground = fg.normal;
                     background = bg.normal;
@@ -272,7 +276,7 @@ in
             ];
           }))
         ]
-      ) userCfgs;
+      ) config.jstos.users;
     }
   ];
 }
