@@ -233,12 +233,12 @@
   };
 
   config = {
-    home-manager.users = lib.mapAttrs (user: cfg: {
+    home-manager.users = lib.mapAttrs (user: jstos: {
       # Color column script,
       # inspired by <https://github.com/mbadolato/iTerm2-Color-Schemes/blob/master/tools/screenshotTable.sh>.
       xdg.dataFile."color-columns.sh" = {
         executable = true;
-        text = with cfg.colors.term; ''
+        text = with jstos.colors.term; ''
           #!${lib.getExe pkgs.bash}
           text='gYw'
 
@@ -253,7 +253,7 @@
         '';
       };
 
-      xdg.dataFile."colors.json".text = builtins.toJSON cfg.colors;
+      xdg.dataFile."colors.json".text = builtins.toJSON jstos.colors;
     }) config.jstos.users;
   };
 }

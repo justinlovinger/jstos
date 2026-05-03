@@ -5,7 +5,7 @@
   ...
 }:
 let
-  userCfgs = lib.mapAttrs (_: cfg: cfg.llm) config.jstos.users;
+  cfgs = map (jstos: jstos.llm) (builtins.attrValues config.jstos.users);
 
   modelsOption = lib.mkOption {
     type = lib.types.attrsOf (
@@ -148,16 +148,13 @@ in
   };
 
   config = {
-    services.ollama.enable = lib.any (cfg: cfg.enable && cfg.local.enable) (lib.attrValues userCfgs);
+    services.ollama.enable = lib.any (cfg: cfg.enable && cfg.local.enable) cfgs;
 
     home-manager.users = lib.mapAttrs (
-      user: cfg:
-      {
-        config,
-        lib,
-        pkgs,
-        ...
-      }:
+      user: jstos:
+      let
+        cfg = jstos.llm;
+      in
       {
         programs.aichat = {
           enable = true;
@@ -282,6 +279,6 @@ in
             };
         };
       }
-    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
+    ) config.jstos.users;
   };
 }

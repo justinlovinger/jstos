@@ -5,8 +5,6 @@
   ...
 }:
 let
-  userCfgs = lib.mapAttrs (_: cfg: cfg.goGame) config.jstos.users;
-
   katagoSettingsFormat = {
     generate =
       let
@@ -275,109 +273,109 @@ in
 
   config = {
     home-manager.users = lib.mapAttrs (
-      user: cfg:
-      {
-        config,
-        lib,
-        pkgs,
-        ...
-      }:
+      user: jstos:
+      let
+        cfg = jstos.goGame;
+      in
+      { config, lib, ... }:
       let
         katagoConfigDir = ".katago";
         katagoRemote = pkgs.writeShellScriptBin "katago" ''
           ssh ${cfg.katago.remote.address} katago "$@"
         '';
       in
-      lib.mkMerge [
-        {
-          home.packages = [ pkgs.sabaki ];
-        }
-
-        (lib.mkIf cfg.gnugo.enable {
-          home.packages = [ cfg.gnugo.package ];
-        })
-
-        (lib.mkIf cfg.katago.enable (
-          if cfg.katago.remote.enable then
-            {
-              home.packages = [ katagoRemote ];
-            }
-          else
-            {
-              home.packages = [ cfg.katago.package ];
-              home.file = {
-                "${katagoConfigDir}/default_gtp.cfg".source =
-                  katagoSettingsFormat.generate "default_gtp.cfg" cfg.katago.defaultSettings;
-              };
-            }
-        ))
-
-        (
-          let
-            engines =
-              (
-                if cfg.gnugo.enable then
-                  (map (x: {
-                    name = "GNU Go, Level ${toString x}";
-                    path = "gnugo";
-                    args = "--mode gtp --level ${toString x}";
-                  }) (lib.lists.range 0 10))
-                else
-                  [ ]
-              )
-              ++ (
-                let
-                  # When using remote KataGo,
-                  # the client needs to know paths
-                  # but does not need them in the store.
-                  outPath = drv: if cfg.katago.remote.enable then builtins.unsafeDiscardStringContext drv else drv;
-                in
-                if cfg.katago.enable then
-                  (lib.mapAttrsToList (
-                    name:
-                    {
-                      file,
-                      settings,
-                    }:
-                    {
-                      inherit name;
-                      path = "katago";
-                      args = lib.concatStringsSep " " (
-                        [
-                          "gtp"
-                          "-model"
-                          (outPath file)
-                        ]
-                        ++ (
-                          if builtins.isNull settings then
-                            [ ]
-                          else
-                            [
-                              "-config"
-                              (outPath (katagoSettingsFormat.generate "${name}.cfg" settings))
-                            ]
-                        )
-                      );
-                    }
-                  ) cfg.katago.models)
-                else
-                  [ ]
-              );
-
-            settingsFile = "${config.xdg.configHome}/Sabaki/settings.json";
-          in
+      lib.mkIf cfg.enable (
+        lib.mkMerge [
           {
-            home.activation.setSabakiEngines = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-              $DRY_RUN_CMD ${(pkgs.writeScript "set-sabaki-engines.sh" ''
-                #!${lib.getExe pkgs.nushell}
-                if ("${settingsFile}" | path exists) {
-                  open ${settingsFile} | update "engines.list" ${builtins.toJSON engines} | to json | save -f ${settingsFile}
-                }
-              '')}
-            '';
+            home.packages = [ pkgs.sabaki ];
           }
-        )
-      ]
-    ) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
+
+          (lib.mkIf cfg.gnugo.enable {
+            home.packages = [ cfg.gnugo.package ];
+          })
+
+          (lib.mkIf cfg.katago.enable (
+            if cfg.katago.remote.enable then
+              {
+                home.packages = [ katagoRemote ];
+              }
+            else
+              {
+                home.packages = [ cfg.katago.package ];
+                home.file = {
+                  "${katagoConfigDir}/default_gtp.cfg".source =
+                    katagoSettingsFormat.generate "default_gtp.cfg" cfg.katago.defaultSettings;
+                };
+              }
+          ))
+
+          (
+            let
+              engines =
+                (
+                  if cfg.gnugo.enable then
+                    (map (x: {
+                      name = "GNU Go, Level ${toString x}";
+                      path = "gnugo";
+                      args = "--mode gtp --level ${toString x}";
+                    }) (lib.lists.range 0 10))
+                  else
+                    [ ]
+                )
+                ++ (
+                  let
+                    # When using remote KataGo,
+                    # the client needs to know paths
+                    # but does not need them in the store.
+                    outPath = drv: if cfg.katago.remote.enable then builtins.unsafeDiscardStringContext drv else drv;
+                  in
+                  if cfg.katago.enable then
+                    (lib.mapAttrsToList (
+                      name:
+                      {
+                        file,
+                        settings,
+                      }:
+                      {
+                        inherit name;
+                        path = "katago";
+                        args = lib.concatStringsSep " " (
+                          [
+                            "gtp"
+                            "-model"
+                            (outPath file)
+                          ]
+                          ++ (
+                            if builtins.isNull settings then
+                              [ ]
+                            else
+                              [
+                                "-config"
+                                (outPath (katagoSettingsFormat.generate "${name}.cfg" settings))
+                              ]
+                          )
+                        );
+                      }
+                    ) cfg.katago.models)
+                  else
+                    [ ]
+                );
+
+              settingsFile = "${config.xdg.configHome}/Sabaki/settings.json";
+            in
+            {
+              home.activation.setSabakiEngines = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+                $DRY_RUN_CMD ${(pkgs.writeScript "set-sabaki-engines.sh" ''
+                  #!${lib.getExe pkgs.nushell}
+                  if ("${settingsFile}" | path exists) {
+                    open ${settingsFile} | update "engines.list" ${builtins.toJSON engines} | to json | save -f ${settingsFile}
+                  }
+                '')}
+              '';
+            }
+          )
+        ]
+      )
+    ) config.jstos.users;
   };
 }

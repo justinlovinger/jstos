@@ -89,31 +89,31 @@ let
     }
   );
 
-  userCfgs = lib.mapAttrs (_: cfg: cfg.desktop.map) config.jstos.users;
+  cfgs = map (jstos: jstos.desktop.map) (builtins.attrValues config.jstos.users);
 in
 {
-  options.jstos.users = lib.mkOption {
-    type = lib.types.attrsOf (
-      lib.types.submodule ({
-        options.desktop.map = {
-          enable = lib.mkOption {
-            type = lib.types.bool;
-            default = false;
-            description = ''
-              Whether to enable the map.
-            '';
-          };
+  jstos.userModules = [
+    {
+      options.desktop.map = {
+        enable = lib.mkOption {
+          type = lib.types.bool;
+          default = false;
+          description = ''
+            Whether to enable the map.
+          '';
         };
-      })
-    );
-  };
+      };
+    }
+  ];
 
-  config = {
-    services.geoclue2.enable = lib.mkIf (builtins.any (cfg: cfg.enable) (
-      builtins.attrValues userCfgs
-    )) true;
+  services.geoclue2.enable = lib.mkIf (builtins.any (cfg: cfg.enable) cfgs) true;
 
-    home-manager.users = lib.mapAttrs (user: cfg: {
+  home-manager.users = lib.mapAttrs (
+    user: jstos:
+    let
+      cfg = jstos.desktop.map;
+    in
+    lib.mkIf cfg.enable {
       home.packages = [ mepo ];
 
       xdg.configFile."mepo/config.json".source = (pkgs.formats.json { }).generate "config.json" [
@@ -165,6 +165,6 @@ in
         # }
         # ```
       ];
-    }) (lib.filterAttrs (_: cfg: cfg.enable) userCfgs);
-  };
+    }
+  ) config.jstos.users;
 }
