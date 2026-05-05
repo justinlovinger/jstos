@@ -16,8 +16,26 @@ let
   # using `pkgs.zellij`,
   # for the remote machine.
   moshWrapped = pkgs.writeShellScriptBin "mosh" ''
-    exec ${lib.getExe' pkgs.mosh "mosh"} "$@" -- zellij
+    exec ${lib.getExe' mosh "mosh"} "$@" -- zellij
   '';
+
+  # Without a patch,
+  # Mosh ignores cursor shape
+  # in many situations.
+  mosh = pkgs.mosh.overrideAttrs (
+    {
+      patches ? [ ],
+      ...
+    }:
+    {
+      patches = patches ++ [
+        (pkgs.fetchpatch {
+          url = "https://github.com/matheusfillipe/mosh/commit/c7740d43fe616889aa89ac82a1dd631ef54193b5.patch";
+          hash = "sha256-ratfcw8gvvwhTpjCSdHPznEDp/jpBtx0Xavbx03pTDg=";
+        })
+      ];
+    }
+  );
 
   shellWindow = pkgs.writeShellScriptBin "shell-window" ''
     exec ${lib.getExe terminalWindow} "$@" -e ${lib.getExe pkgs.zellij}
@@ -87,7 +105,10 @@ in
     )
   ];
 
-  programs.mosh.enable = lib.mkIf serverEnabled true;
+  programs.mosh = lib.mkIf serverEnabled {
+    enable = true;
+    package = mosh;
+  };
   environment.sessionVariables.MOSH_SERVER_NETWORK_TMOUT = lib.mkIf serverEnabled "1209600"; # 2 weeks
 
   home-manager.users = lib.mapAttrs (

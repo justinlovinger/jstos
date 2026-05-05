@@ -1,5 +1,6 @@
 {
   config,
+  jstos-pkgs,
   lib,
   pkgs,
   ...
@@ -101,12 +102,15 @@ in
 
                 # `flow` does not currently support moving tags.
                 "Super y".normal.command =
-                  "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32 --occupied'";
-                "Super u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32 --occupied'";
-                "Super+Control y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags previous 32'";
-                "Super+Control u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags next 32'";
-                # "Super+Shift y".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move previous 32'";
-                # "Super+Shift u".normal.command = "spawn '${lib.getExe' pkgs.flow "flow"} cycle-tags --move next 32'";
+                  "spawn '${lib.getExe' jstos-pkgs.flow "flow"} cycle-tags previous 32 --occupied'";
+                "Super u".normal.command =
+                  "spawn '${lib.getExe' jstos-pkgs.flow "flow"} cycle-tags next 32 --occupied'";
+                "Super+Control y".normal.command =
+                  "spawn '${lib.getExe' jstos-pkgs.flow "flow"} cycle-tags previous 32'";
+                "Super+Control u".normal.command =
+                  "spawn '${lib.getExe' jstos-pkgs.flow "flow"} cycle-tags next 32'";
+                # "Super+Shift y".normal.command = "spawn '${lib.getExe' jstos-pkgs.flow "flow"} cycle-tags --move previous 32'";
+                # "Super+Shift u".normal.command = "spawn '${lib.getExe' jstos-pkgs.flow "flow"} cycle-tags --move next 32'";
 
                 "Super bracketleft".normal.command = "focus-previous-tags";
                 "Super bracketright".normal.command = "focus-previous-tags";
@@ -566,9 +570,9 @@ in
               riverctl input $i tap enabled
             done
 
-            riverctl spawn '${lib.getExe' pkgs.owm "owm"} --overlap-borders-by ${builtins.toString border} --reading-order-weight=1'
-            riverctl spawn '${lib.getExe' pkgs.owm "owm"} --namespace overview --overlap-borders-by ${builtins.toString border} --max-width "" --area-ratios 1 --center-main-weight 0'
-            riverctl spawn '${lib.getExe' pkgs.owm "owm"} --namespace monocle --overlap-borders-by ${builtins.toString border} --min-width 9999 --min-height 9999 --max-width ""'
+            riverctl spawn '${lib.getExe' jstos-pkgs.owm "owm"} --overlap-borders-by ${builtins.toString border} --reading-order-weight=1'
+            riverctl spawn '${lib.getExe' jstos-pkgs.owm "owm"} --namespace overview --overlap-borders-by ${builtins.toString border} --max-width "" --area-ratios 1 --center-main-weight 0'
+            riverctl spawn '${lib.getExe' jstos-pkgs.owm "owm"} --namespace monocle --overlap-borders-by ${builtins.toString border} --min-width 9999 --min-height 9999 --max-width ""'
             riverctl default-layout owm
           '';
 

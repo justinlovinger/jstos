@@ -5,6 +5,16 @@
   ...
 }:
 let
+  sabaki = pkgs.appimageTools.wrapType2 {
+    pname = "sabaki";
+    version = "0.52.2";
+    src = pkgs.fetchurl {
+      url = "https://github.com/SabakiHQ/Sabaki/releases/download/v0.52.2/sabaki-v0.52.2-linux-x64.AppImage";
+      hash = "sha256-wuCj5HvNZc2KOdc5O49upNToFDKiMMWexykctHi51EY=";
+    };
+    extraPkgs = pkgs: [ pkgs.xorg.libxshmfence ];
+  };
+
   katagoSettingsFormat = {
     generate =
       let
@@ -287,7 +297,7 @@ in
       lib.mkIf cfg.enable (
         lib.mkMerge [
           {
-            home.packages = [ pkgs.sabaki ];
+            home.packages = [ sabaki ];
           }
 
           (lib.mkIf cfg.gnugo.enable {

@@ -37,7 +37,7 @@
                 ${lib.getExe pkgs.way-displays} -s DISABLED ${cfg.name}
                 ${
                   if cfg.disableTouch.enable then
-                    "${lib.getExe' pkgs.river "riverctl"} input ${cfg.disableTouch.input} events disabled"
+                    "${lib.getExe' pkgs.river-classic "riverctl"} input ${cfg.disableTouch.input} events disabled"
                   else
                     ""
                 }
@@ -45,7 +45,7 @@
                 ${lib.getExe pkgs.way-displays} -d DISABLED ${cfg.name}
                 ${
                   if cfg.disableTouch.enable then
-                    "${lib.getExe' pkgs.river "riverctl"} input ${cfg.disableTouch.input} events enabled"
+                    "${lib.getExe' pkgs.river-classic "riverctl"} input ${cfg.disableTouch.input} events enabled"
                   else
                     ""
                 }

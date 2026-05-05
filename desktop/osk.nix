@@ -5,8 +5,27 @@
   ...
 }:
 let
-  osk = "${lib.getExe' pkgs.wvkbd "wvkbd-deskintl"}";
+  osk = "${lib.getExe' wvkbd "wvkbd-deskintl"}";
   oskState = ''$"($env.XDG_RUNTIME_DIR)/osk"'';
+
+  wvkbd = pkgs.wvkbd.overrideAttrs (
+    {
+      buildFlags ? [ ],
+      installFlags ? [ ],
+      patches ? [ ],
+      ...
+    }:
+    {
+      buildFlags = buildFlags ++ [ "LAYOUT=deskintl" ];
+      installFlags = installFlags ++ [ "LAYOUT=deskintl" ];
+      patches = patches ++ [
+        (pkgs.fetchpatch {
+          url = "https://github.com/jjsullivan5196/wvkbd/commit/05e9230a4ce5b2b319ecf711dcb0f29feadc1672.patch";
+          hash = "sha256-Myoc5EHCPZiw4hpFTuU1Mr2ybPmUnSwzL8KPHLgWdFk=";
+        })
+      ];
+    }
+  );
 in
 {
   jstos.userModules = [
