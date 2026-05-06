@@ -227,6 +227,73 @@
               fg = lib.genAttrs colors (termOption "fg");
             };
           };
+
+          config.colors.hsl =
+            let
+              grayHue = 0.0;
+              redHue = 360.0; # Technically also 0, but 0 makes it gray
+              orangeHue = 30.0;
+              yellowHue = 60.0;
+              chartreuseHue = 90.0;
+              greenHue = 120.0;
+              springHue = 150.0;
+              cyanHue = 180.0;
+              azureHue = 210.0;
+              blueHue = 240.0;
+              violetHue = 270.0;
+              magentaHue = 300.0;
+              roseHue = 330.0;
+
+              saturation = 0.75;
+
+              bgLuminosity = 0.2;
+              fgLuminosity = 0.725;
+
+              adjust =
+                r: y: x:
+                x + r * (y - x);
+
+              hsl = h: s: l: { inherit h s l; };
+            in
+            rec {
+              # Adjust saturation
+              # of colors
+              # that the human eye is extra sensitive to.
+              bg = {
+                normal = lib.mkDefault (hsl grayHue 0.0 0.0);
+                faded = lib.mkDefault bg.gray;
+                gray = lib.mkDefault (hsl grayHue 0.0 bgLuminosity);
+                red = lib.mkDefault (hsl redHue saturation bgLuminosity);
+                orange = lib.mkDefault (hsl orangeHue (adjust 0.05 0.0 saturation) bgLuminosity);
+                yellow = lib.mkDefault (hsl yellowHue saturation bgLuminosity);
+                chartreuse = lib.mkDefault (hsl chartreuseHue (adjust 0.05 0.0 saturation) bgLuminosity);
+                green = lib.mkDefault (hsl greenHue (adjust 0.1 0.0 saturation) bgLuminosity);
+                spring = lib.mkDefault (hsl springHue (adjust 0.05 0.0 saturation) bgLuminosity);
+                cyan = lib.mkDefault (hsl cyanHue saturation bgLuminosity);
+                azure = lib.mkDefault (hsl azureHue saturation bgLuminosity);
+                blue = lib.mkDefault (hsl blueHue (adjust 0.1 0.0 saturation) bgLuminosity);
+                violet = lib.mkDefault (hsl violetHue (adjust 0.05 0.0 saturation) bgLuminosity);
+                magenta = lib.mkDefault (hsl magentaHue (adjust 0.05 0.0 saturation) bgLuminosity);
+                rose = lib.mkDefault (hsl roseHue saturation bgLuminosity);
+              };
+              fg = {
+                normal = lib.mkDefault (hsl grayHue 0.0 1.0);
+                faded = lib.mkDefault fg.gray;
+                gray = lib.mkDefault (hsl grayHue 0.0 fgLuminosity);
+                red = lib.mkDefault (hsl redHue saturation fgLuminosity);
+                orange = lib.mkDefault (hsl orangeHue (adjust 0.05 0.0 saturation) fgLuminosity);
+                yellow = lib.mkDefault (hsl yellowHue saturation (adjust 0.1 0.0 fgLuminosity)); # Differentiate from white
+                chartreuse = lib.mkDefault (hsl chartreuseHue (adjust 0.05 0.0 saturation) fgLuminosity);
+                green = lib.mkDefault (hsl greenHue (adjust 0.1 0.0 saturation) fgLuminosity);
+                spring = lib.mkDefault (hsl springHue (adjust 0.05 0.0 saturation) fgLuminosity);
+                cyan = lib.mkDefault (hsl cyanHue saturation fgLuminosity);
+                azure = lib.mkDefault (hsl azureHue (adjust 0.05 0.0 saturation) fgLuminosity);
+                blue = lib.mkDefault (hsl blueHue (adjust 0.1 0.0 saturation) fgLuminosity);
+                violet = lib.mkDefault (hsl violetHue (adjust 0.05 0.0 saturation) fgLuminosity);
+                magenta = lib.mkDefault (hsl magentaHue saturation fgLuminosity);
+                rose = lib.mkDefault (hsl roseHue saturation fgLuminosity);
+              };
+            };
         }
       )
     );
