@@ -132,13 +132,24 @@ in
                 max_input_tokens = 1048576;
                 supports_reasoning = true;
                 supports_function_calling = true;
-                patch.body.reasoning.enabled = lib.mkDefault true;
+                patch.body = {
+                  reasoning.enabled = lib.mkDefault true;
+                  models = [
+                    "deepseek/deepseek-v3.2"
+                  ];
+                };
               };
               "deepseek/deepseek-v4-pro" = {
                 max_input_tokens = 1048576;
                 supports_reasoning = true;
                 supports_function_calling = true;
-                patch.body.reasoning.enabled = lib.mkDefault true;
+                patch.body = {
+                  reasoning.enabled = lib.mkDefault true;
+                  models = [
+                    "deepseek/deepseek-v4-flash"
+                    "deepseek/deepseek-v3.2"
+                  ];
+                };
               };
             };
           };
