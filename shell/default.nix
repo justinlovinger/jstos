@@ -5,6 +5,7 @@
 {
   imports = [
     ./browser.nix
+    ./shell
   ];
 
   jstos.userModules = [

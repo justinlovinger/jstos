@@ -123,6 +123,15 @@ in
         home.packages = [
           shellWindow
           terminalWindow
+
+          (lib.mkIf jstos.shell.enable (
+            # As of 2022-12-12,
+            # `nu -i -c` fails to automatically source `config.nu`,
+            # <https://github.com/nushell/nushell/issues/7442>.
+            pkgs.writeShellScriptBin "t" ''
+              exec terminal-window --working-directory "$PWD" -T "$(dirs +0):$*" -e ${lib.getExe pkgs.nushell} --config ~/.config/nushell/config.nu --env-config ~/.config/nushell/env.nu -i -c "$*" > /dev/null 2>&1 & disown
+            ''
+          ))
         ];
 
         programs.foot = {

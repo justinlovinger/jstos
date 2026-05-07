@@ -9,6 +9,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    naersk = {
+      url = "github:nix-community/naersk/master";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     flow = {
       url = "github:stefur/flow/v0.2.1";
       flake = false;
@@ -19,6 +24,15 @@
       inputs = {
         systems.follows = "systems";
         nixpkgs.follows = "nixpkgs";
+      };
+    };
+
+    tag = {
+      url = "github:justinlovinger/tag";
+      inputs = {
+        systems.follows = "systems";
+        nixpkgs.follows = "nixpkgs";
+        naersk.follows = "naersk";
       };
     };
 
@@ -52,6 +66,10 @@
           };
 
           owm = inputs.owm.packages.${system}.default;
+
+          tag = inputs.tag.packages.${system}.tag;
+          tag-organize = inputs.tag.packages.${system}.tag-organize;
+          tag-view = inputs.tag.packages.${system}.tag-view;
         };
 
         imports = [

@@ -55,6 +55,12 @@
           L = "n => pager.cursorRight(n)";
         };
       };
+
+      programs.nushell.extraConfig = lib.mkIf jstos.shell.enable ''
+        def ? [...query: string] {
+          cha $"https://lite.duckduckgo.com/lite?kp=-1&kd=-1&q=($query | str join ' ' | url encode --all)"
+        }
+      '';
     }
   ) config.jstos.users;
 
