@@ -59,6 +59,14 @@ in
             '';
           };
 
+          default = lib.mkOption {
+            type = lib.types.bool;
+            default = true;
+            description = ''
+              Whether this is the default terminal.
+            '';
+          };
+
           remote = {
             client = {
               enable = lib.mkEnableOption "remote shell client";
@@ -291,6 +299,41 @@ in
           moshWindow
           moshWrapped
         ];
+      }))
+
+      (lib.mkIf (cfg.enable && cfg.default) ({
+        home.packages = [
+          (pkgs.makeDesktopItem {
+            name = "term-dir-handler";
+            type = "Application";
+            exec = "shell-window --working-directory %F";
+            desktopName = "Open Directory In Terminal";
+            mimeTypes = [
+              "inode/directory"
+              "inode/mount-point"
+            ];
+            categories = [
+              "System"
+              "FileTools"
+              "FileManager"
+            ];
+          })
+        ];
+
+        home.sessionVariables.TERMINAL = "shell-window";
+
+        xdg.mimeApps = {
+          enable = true;
+
+          defaultApplications =
+            let
+              fileManager = "term-dir-handler.desktop";
+            in
+            {
+              "inode/directory" = fileManager;
+              "inode/mount-point" = fileManager;
+            };
+        };
       }))
     ]
   ) config.jstos.users;
