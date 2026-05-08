@@ -12,8 +12,8 @@
 
   outputs =
     {
-      nixpkgs,
       systems,
+      nixpkgs,
       mcp-servers-nix,
       ...
     }:

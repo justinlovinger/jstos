@@ -19,6 +19,16 @@
       flake = false;
     };
 
+    mime-db = {
+      # Ideally,
+      # follow releases.
+      # However,
+      # Nix flakes can only follow branches
+      # as of 2022-02-04.
+      url = "github:jshttp/mime-db";
+      flake = false;
+    };
+
     owm = {
       url = "github:justinlovinger/owm";
       inputs = {
@@ -50,20 +60,35 @@
     };
   };
 
-  outputs = inputs: {
-    nixosModules.default =
-      { pkgs, ... }:
-      let
-        system = pkgs.stdenv.hostPlatform.system;
-      in
-      {
-        _module.args.jstos-pkgs = {
-          flow = pkgs.rustPlatform.buildRustPackage {
+  outputs =
+    {
+      systems,
+      nixpkgs,
+      ...
+    }@inputs:
+    let
+      pkgs = eachSystem (system: import nixpkgs { inherit system; });
+      eachSystem = nixpkgs.lib.genAttrs (import systems);
+    in
+    rec {
+      packages = eachSystem (system: overlays.default pkgs.${system} pkgs.${system});
+
+      overlays.default =
+        final: prev:
+        let
+          system = final.stdenv.hostPlatform.system;
+        in
+        {
+          flow = final.rustPlatform.buildRustPackage {
             pname = "flow";
             version = "latest";
             src = inputs.flow;
             cargoLock.lockFile = inputs.flow + "/Cargo.lock";
           };
+
+          mimeTypes = builtins.attrNames (
+            builtins.fromJSON (builtins.readFile (inputs.mime-db + "/db.json"))
+          );
 
           owm = inputs.owm.packages.${system}.default;
 
@@ -72,18 +97,23 @@
           tag-view = inputs.tag.packages.${system}.tag-view;
         };
 
-        imports = [
-          ./default.nix
+      nixosModules.default =
+        { pkgs, ... }:
+        {
+          _module.args.jstos-pkgs = packages.${pkgs.stdenv.hostPlatform.system};
 
-          inputs.home-manager.nixosModules.home-manager
-          inputs.wayland-pipewire-idle-inhibit.nixosModules.default
-          inputs.whisp-away.nixosModules.nixos
-        ];
+          imports = [
+            ./default.nix
 
-        home-manager.sharedModules = [
-          inputs.wayland-pipewire-idle-inhibit.homeModules.default
-          inputs.whisp-away.nixosModules.home-manager
-        ];
-      };
-  };
+            inputs.home-manager.nixosModules.home-manager
+            inputs.wayland-pipewire-idle-inhibit.nixosModules.default
+            inputs.whisp-away.nixosModules.nixos
+          ];
+
+          home-manager.sharedModules = [
+            inputs.wayland-pipewire-idle-inhibit.homeModules.default
+            inputs.whisp-away.nixosModules.home-manager
+          ];
+        };
+    };
 }
