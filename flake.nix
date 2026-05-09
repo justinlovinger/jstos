@@ -1,5 +1,11 @@
 {
   inputs = {
+    llm = {
+      url = "path:./llm";
+      inputs.systems.follows = "systems";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     systems.url = "github:nix-systems/default";
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
@@ -104,6 +110,8 @@
 
           imports = [
             ./default.nix
+
+            inputs.llm.nixosModules.default
 
             inputs.home-manager.nixosModules.home-manager
             inputs.wayland-pipewire-idle-inhibit.nixosModules.default
