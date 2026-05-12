@@ -23,9 +23,9 @@ let
     );
     default = { };
     description = ''
-      LLM models.
+      Mapping of LLM model names to settings.
       Settings are based on AIChat model settings.
-      Name defaults to name of this attribute.
+      `name` field in settings defaults to model name.
     '';
   };
 
@@ -101,6 +101,10 @@ in
                   }
                 )
               );
+              description = ''
+                MCP servers available to LLMs.
+                MCP servers provide tools.
+              '';
             };
 
             local = {

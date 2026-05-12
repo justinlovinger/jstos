@@ -54,6 +54,7 @@ in
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.desktop.enable;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
             description = ''
               Whether to enable the terminal.
             '';

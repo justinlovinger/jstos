@@ -13,6 +13,7 @@
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.shell.enable;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.shell.enable";
             description = ''
               Whether to enable the shell browser.
             '';

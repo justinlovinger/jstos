@@ -11,6 +11,7 @@ in
     enable = lib.mkOption {
       type = lib.types.bool;
       default = config.jstos.system.enable;
+      defaultText = lib.literalExpression "config.jstos.system.enable";
       description = ''
         Whether to compress memory.
       '';

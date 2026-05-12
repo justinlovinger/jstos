@@ -38,11 +38,6 @@
                   l = lib.mkOption { type = lib.types.float; };
                 };
               };
-              description = ''
-                ${
-                  if position == "bg" then "Background" else "Foreground"
-                } ${color} color in `{h = hhh.h; s = s.s; l = l.l;}` format.
-              '';
             };
 
           rgbOption =
@@ -57,11 +52,6 @@
               };
               readOnly = true;
               default = hslToRgb cfg.hsl.${position}.${color};
-              description = ''
-                ${
-                  if position == "bg" then "Background" else "Foreground"
-                } ${color} color in `{r = rrr; g = ggg; b = bbb;}` format.
-              '';
             };
 
           hexOption =
@@ -70,9 +60,6 @@
               type = lib.types.str;
               readOnly = true;
               default = rgbToHex cfg.rgb.${position}.${color};
-              description = ''
-                ${if position == "bg" then "Background" else "Foreground"} ${color} color in `#rrggbb` format.
-              '';
             };
 
           hexWithoutHashOption =
@@ -81,9 +68,6 @@
               type = lib.types.str;
               readOnly = true;
               default = stripLeadingChar cfg.hex.${position}.${color};
-              description = ''
-                ${if position == "bg" then "Background" else "Foreground"} ${color} color in `rrggbb` format.
-              '';
             };
 
           termOption =
@@ -92,9 +76,6 @@
               type = lib.types.str;
               readOnly = true;
               default = (if position == "bg" then termBgColor else termFgColor) cfg.hex.${position}.${color};
-              description = ''
-                ${if position == "bg" then "Background" else "Foreground"} ${color} color in terminal format.
-              '';
             };
 
           rgbToHex =
@@ -205,27 +186,125 @@
           cfg = config.colors;
         in
         {
-          options.colors = {
-            hsl = {
-              bg = lib.genAttrs colors (hslOption "bg");
-              fg = lib.genAttrs colors (hslOption "fg");
+          options.colors = lib.mkOption {
+            type = lib.types.submodule {
+              options = {
+                hsl = lib.mkOption {
+                  type = lib.types.submodule {
+                    options = {
+                      bg = lib.genAttrs colors (hslOption "bg");
+                      fg = lib.genAttrs colors (hslOption "fg");
+                    };
+                  };
+                  default = { };
+                  defaultText = lib.literalExpression "A custom theme with high contract and an even spread of hues.";
+                  visible = "shallow";
+                  description = ''
+                    Colors in `{h = hhh.h; s = s.s; l = l.l;}` format.
+                  '';
+                };
+                rgb = lib.mkOption {
+                  type = lib.types.submodule {
+                    options = {
+                      bg = lib.genAttrs colors (rgbOption "bg");
+                      fg = lib.genAttrs colors (rgbOption "fg");
+                    };
+                  };
+                  readOnly = true;
+                  default = { };
+                  defaultText = lib.literalExpression "Derived from `config.jstos.users.<name>.colors.hsl`.";
+                  visible = "shallow";
+                  description = ''
+                    Colors in `{r = rrr; g = ggg; b = bbb;}` format.
+                  '';
+                };
+                hex = lib.mkOption {
+                  type = lib.types.submodule {
+                    options = {
+                      bg = lib.genAttrs colors (hexOption "bg");
+                      fg = lib.genAttrs colors (hexOption "fg");
+                    };
+                  };
+                  readOnly = true;
+                  default = { };
+                  defaultText = lib.literalExpression "Derived from `config.jstos.users.<name>.colors.hsl`.";
+                  visible = "shallow";
+                  description = ''
+                    Colors in `#rrggbb` format.
+                  '';
+                };
+                hexWithoutHash = lib.mkOption {
+                  type = lib.types.submodule {
+                    options = {
+                      bg = lib.genAttrs colors (hexWithoutHashOption "bg");
+                      fg = lib.genAttrs colors (hexWithoutHashOption "fg");
+                    };
+                  };
+                  readOnly = true;
+                  default = { };
+                  defaultText = lib.literalExpression "Derived from `config.jstos.users.<name>.colors.hsl`.";
+                  visible = "shallow";
+                  description = ''
+                    Colors in `rrggbb` format.
+                  '';
+                };
+                term = lib.mkOption {
+                  type = lib.types.submodule {
+                    options = {
+                      bg = lib.genAttrs colors (termOption "bg");
+                      fg = lib.genAttrs colors (termOption "fg");
+                    };
+                  };
+                  readOnly = true;
+                  default = { };
+                  defaultText = lib.literalExpression "Derived from `config.jstos.users.<name>.colors.hsl`.";
+                  visible = "shallow";
+                  description = ''
+                    Colors in terminal code format.
+                  '';
+                };
+              };
             };
-            rgb = {
-              bg = lib.genAttrs colors (rgbOption "bg");
-              fg = lib.genAttrs colors (rgbOption "fg");
-            };
-            hex = {
-              bg = lib.genAttrs colors (hexOption "bg");
-              fg = lib.genAttrs colors (hexOption "fg");
-            };
-            hexWithoutHash = {
-              bg = lib.genAttrs colors (hexWithoutHashOption "bg");
-              fg = lib.genAttrs colors (hexWithoutHashOption "fg");
-            };
-            term = {
-              bg = lib.genAttrs colors (termOption "bg");
-              fg = lib.genAttrs colors (termOption "fg");
-            };
+            default = { };
+            defaultText = lib.literalExpression "A custom theme with high contract and an even spread of hues.";
+            description = ''
+              Colors in various formats.
+              Colors other than `hsl` are derived from `hsl`.
+              Current colors are available in `~/.local/share/colors.json` and `~/.local/share/color-columns.sh`.
+
+              Each color format is a set of the form,
+
+              ```
+              {
+                bg = <colors>;
+                fg = <colors>;
+              }
+              ```
+
+              where `<colors>` is a set of the form,
+
+              ```
+              {
+                normal = <format>;
+                faded = <format>;
+                gray = <format>;
+                red = <format>;
+                orange = <format>;
+                yellow = <format>;
+                chartreuse = <format>;
+                green = <format>;
+                spring = <format>;
+                cyan = <format>;
+                azure = <format>;
+                blue = <format>;
+                violet = <format>;
+                magenta = <format>;
+                rose = <format>;
+              }
+              ```
+
+              and `<format>` is the color format of the set.
+            '';
           };
 
           config.colors.hsl =

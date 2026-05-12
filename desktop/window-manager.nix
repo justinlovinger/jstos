@@ -18,6 +18,7 @@ in
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.desktop.enable;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
             description = ''
               Whether to enable the window manager.
             '';
@@ -72,7 +73,7 @@ in
           swapCapsEsc = lib.mkOption {
             type = lib.types.bool;
             default = true;
-            example = "false";
+            example = false;
             description = ''
               Swap behavior of Caps Lock and Esc.
             '';

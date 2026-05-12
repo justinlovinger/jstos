@@ -32,7 +32,7 @@
           command = lib.mkOption {
             type = lib.types.path;
             readOnly = true;
-            default = pkgs.writeScript "toggle-dictation" ''
+            default = pkgs.writeScript "toggle-dictation.sh" ''
               #!${lib.getExe pkgs.nushell}
               let state = $"($env.XDG_RUNTIME_DIR)/dictation"
               if ($state | path exists) {
@@ -43,6 +43,7 @@
                 touch $state
               }
             '';
+            defaultText = lib.literalExpression "toggle-dictation.sh";
             description = ''
               Command to run when the binding is pressed.
             '';

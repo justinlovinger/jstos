@@ -80,12 +80,12 @@
       packages = eachSystem (system: overlays.default pkgs.${system} pkgs.${system});
 
       overlays.default =
-        final: prev:
+        pkgs: prev:
         let
-          system = final.stdenv.hostPlatform.system;
+          system = pkgs.stdenv.hostPlatform.system;
         in
         {
-          flow = final.rustPlatform.buildRustPackage {
+          flow = pkgs.rustPlatform.buildRustPackage {
             pname = "flow";
             version = "latest";
             src = inputs.flow;
@@ -101,16 +101,77 @@
           tag = inputs.tag.packages.${system}.tag;
           tag-organize = inputs.tag.packages.${system}.tag-organize;
           tag-view = inputs.tag.packages.${system}.tag-view;
+
+          jstos-manpage =
+            let
+              eval = pkgs.lib.evalModules {
+                specialArgs = { inherit pkgs; };
+                # Using `nixosModules.default` directly
+                # pulls in options from dependencies.
+                modules = [
+                  { _module.check = false; }
+                  ./default.nix
+                  ./llm/module.nix
+                ];
+              };
+              optionsDocs = pkgs.nixosOptionsDoc {
+                inherit (eval) options;
+                documentType = "nixos";
+              };
+
+            in
+            pkgs.runCommand "jstos-manpage"
+              {
+                nativeBuildInputs = [
+                  pkgs.buildPackages.installShellFiles
+                  pkgs.nixos-render-docs
+                ];
+                allowedReferences = [ "out" ];
+              }
+              ''
+                mkdir -p $out/share/man/man5
+                mkdir -p $out/share/man/man1
+                nixos-render-docs -j $NIX_BUILD_CORES options manpage \
+                  --revision "" \
+                  --header "${builtins.toFile "jstos-configuration-nix-header.5" ''
+                    .TH "JSTOS-CONFIGURATION\&.NIX" "5" "01/01/1980" "JstOS"
+                    .\" disable hyphenation
+                    .nh
+                    .\" disable justification (adjust text to left margin only)
+                    .ad l
+                    .\" enable line breaks after slashes
+                    .cflags 4 /
+                    .SH "NAME"
+                    \fIjstos\-configuration\&.nix\fP \- JstOS configuration specification
+                    .SH "DESCRIPTION"
+                    .sp
+                    The following options are added to NixOS\&.
+                    .SH "OPTIONS"
+                    .PP
+                    You can use the following options in
+                    home\-configuration\&.nix:
+                    .PP
+                  ''}" \
+                  --footer ${builtins.toFile "jstos-configuration-nix-footer.5" ''
+                    .SH "AUTHORS"
+                    .PP
+                    Justin Lovinger
+                  ''} \
+                  ${optionsDocs.optionsJSON}/share/doc/nixos/options.json \
+                  $out/share/man/man5/jstos-configuration.nix.5
+              '';
         };
 
       nixosModules.default =
         { pkgs, ... }:
+        let
+          system = pkgs.stdenv.hostPlatform.system;
+        in
         {
-          _module.args.jstos-pkgs = packages.${pkgs.stdenv.hostPlatform.system};
+          _module.args.jstos-pkgs = packages.${system};
 
           imports = [
             ./default.nix
-
             inputs.llm.nixosModules.default
 
             inputs.home-manager.nixosModules.home-manager

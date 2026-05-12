@@ -15,6 +15,7 @@
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.desktop.enable;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
             description = ''
               Whether to enable the toggle-display key.
             '';
@@ -31,7 +32,7 @@
           command = lib.mkOption {
             type = lib.types.path;
             readOnly = true;
-            default = pkgs.writeScript "toggle-display" ''
+            default = pkgs.writeScript "toggle-display.sh" ''
               #!${lib.getExe pkgs.nushell}
               if (${lib.getExe pkgs.way-displays} -y -g | from yaml | get STATE | get HEADS | where NAME == ${cfg.name} | get 0 | get CURRENT | get ENABLED) {
                 ${lib.getExe pkgs.way-displays} -s DISABLED ${cfg.name}
@@ -51,6 +52,7 @@
                 }
               }
             '';
+            defaultText = lib.literalExpression "toggle-display.sh";
             description = ''
               Command to run when the binding is pressed.
             '';
@@ -70,7 +72,7 @@
             enable = lib.mkOption {
               type = lib.types.bool;
               default = true;
-              example = "false";
+              example = false;
               description = ''
                 Whether to disable a touchscreen when display is off.
               '';

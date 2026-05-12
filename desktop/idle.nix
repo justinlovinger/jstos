@@ -13,6 +13,7 @@
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.desktop.enable;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
             description = ''
               Whether to enable idle timeouts.
             '';
@@ -42,6 +43,7 @@
             timeout = lib.mkOption {
               type = lib.types.int;
               default = config.desktop.idle.displays.timeout + 15;
+              defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.idle.displays.timeout + 15";
               description = ''
                 Idle seconds before session is locked.
               '';
@@ -101,6 +103,7 @@
                   "--text-ver-color ${fg.normal}"
                   "--text-wrong-color ${fg.normal}"
                 ];
+              defaultText = lib.literalExpression "swaylock";
               description = ''
                 Command to lock session.
 
@@ -118,6 +121,7 @@
             timeout = lib.mkOption {
               type = lib.types.int;
               default = config.desktop.idle.displays.timeout + 30;
+              defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.idle.displays.timeout + 30";
               description = ''
                 Idle seconds before machine suspends.
               '';

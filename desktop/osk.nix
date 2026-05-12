@@ -55,10 +55,11 @@ in
           command = lib.mkOption {
             type = lib.types.path;
             readOnly = true;
-            default = pkgs.writeScript "toggle-osk" ''
+            default = pkgs.writeScript "toggle-osk.sh" ''
               #!${lib.getExe pkgs.nushell}
               ${lib.getExe' pkgs.coreutils "kill"} -SIGRTMIN (open ${oskState})
             '';
+            defaultText = lib.literalExpression "toggle-osk.sh";
             description = ''
               Command to run when the binding is pressed.
             '';
@@ -94,6 +95,7 @@ in
                   }
                 } > $out
               '';
+              defaultText = lib.literalExpression "words.txt";
               description = ''
                 Word list for SwipeGuess.
               '';

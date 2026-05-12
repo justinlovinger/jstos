@@ -53,13 +53,7 @@ in
                 '';
               };
 
-              package = lib.mkOption {
-                type = lib.types.package;
-                default = pkgs.gnugo;
-                description = ''
-                  The GNU Go package to install.
-                '';
-              };
+              package = lib.mkPackageOption pkgs "GNU Go" { default = "gnugo"; };
             };
 
             katago = {
@@ -71,14 +65,9 @@ in
                 '';
               };
 
-              package = lib.mkOption {
-                type = lib.types.package;
-                default = pkgs.katago;
-                description = ''
-                  The KataGo package to install.
-
-                  This has no effect if using remote KataGo.
-                '';
+              package = lib.mkPackageOption pkgs "KataGo" {
+                default = "katago";
+                extraDescription = "This has no effect if using remote KataGo.";
               };
 
               remote = {
