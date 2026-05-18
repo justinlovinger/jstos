@@ -40,6 +40,7 @@
       inputs = {
         systems.follows = "systems";
         nixpkgs.follows = "nixpkgs";
+        naersk.follows = "naersk";
       };
     };
 
