@@ -9,7 +9,6 @@
     ./colors.nix
     ./desktop
     ./filesystems.nix
-    ./go-game
     ./shell
     ./system
   ];

@@ -111,7 +111,8 @@
                 # pulls in options from dependencies.
                 modules = [
                   { _module.check = false; }
-                  ./default.nix
+                  ./modules
+                  ./go-game
                   ./llm/module.nix
                 ];
               };
@@ -172,7 +173,8 @@
           _module.args.jstos-pkgs = packages.${system};
 
           imports = [
-            ./default.nix
+            ./modules
+            ./go-game
             inputs.llm.nixosModules.default
 
             inputs.home-manager.nixosModules.home-manager
