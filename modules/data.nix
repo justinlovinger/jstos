@@ -12,9 +12,21 @@ lib.mkMerge [
   {
     jstos.userModules = [
       (
-        { name, ... }:
+        {
+          name,
+          config,
+          ...
+        }:
         {
           options.data = {
+            root = lib.mkOption {
+              type = lib.types.str;
+              default = "/home/${name}/data";
+              description = ''
+                Root path of data directory on this machine.
+              '';
+            };
+
             sync = {
               address = lib.mkOption {
                 type = lib.types.str;
@@ -23,8 +35,16 @@ lib.mkMerge [
                   Address of server to sync to.
                 '';
               };
-              client.enable = lib.mkEnableOption "syncing data with the server at `address`";
-              server.enable = lib.mkEnableOption "syncing data with this machine";
+              root = lib.mkOption {
+                type = lib.types.str;
+                default = config.data.root;
+                defaultText = lib.literalExpression "config.jstos.users.<name>.data.root";
+                description = ''
+                  Root path of data directory at `address`.
+                '';
+              };
+              client.enable = lib.mkEnableOption "syncing data directory with the server at `address`";
+              server.enable = lib.mkEnableOption "syncing data directory with this machine";
             };
 
             snapshot = {
@@ -33,12 +53,17 @@ lib.mkMerge [
                 default = false;
                 description = ''
                   Whether to take periodic snapshots
-                  of the data filesystem.
+                  of the data directory.
+                  This requires the data directory be on a filesystem supporting snapshots,
+                  like BTRFS.
+                  Ideally,
+                  the data directory is the root of its filesystem.
                 '';
               };
               root = lib.mkOption {
                 type = lib.types.str;
-                default = "/home/${name}/data";
+                default = config.data.root;
+                defaultText = lib.literalExpression "config.jstos.users.<name>.data.root";
                 description = ''
                   Root path of filesystem to snapshot.
                 '';
@@ -57,7 +82,10 @@ lib.mkMerge [
       boot.kernel.sysctl."fs.inotify.max_user_watches" = "2147483647";
 
       home-manager.users = lib.mapAttrs (
-        user: cfg:
+        user: jstos:
+        let
+          cfg = jstos.data.sync;
+        in
         { config, ... }:
         lib.mkMerge [
           (lib.mkIf (cfg.client.enable || cfg.server.enable) {
@@ -70,8 +98,8 @@ lib.mkMerge [
               pairs = {
                 data = {
                   roots = [
-                    "/home/${user}/data"
-                    "ssh://${cfg.address}//home/${user}/data"
+                    jstos.data.root
+                    "ssh://${cfg.address}/${cfg.root}"
                   ];
                   stateDirectory = "${config.home.homeDirectory}/.unison"; # Home Manager uses a different default than upstream.
                   commandOptions = {
@@ -175,7 +203,7 @@ lib.mkMerge [
             };
           })
         ]
-      ) syncCfgs;
+      ) config.jstos.users;
     }
   )
 
