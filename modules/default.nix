@@ -7,8 +7,8 @@
 {
   imports = [
     ./colors.nix
+    ./data.nix
     ./desktop
-    ./filesystems.nix
     ./shell
     ./system
   ];

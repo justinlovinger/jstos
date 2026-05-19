@@ -5,8 +5,8 @@
   ...
 }:
 let
-  syncCfgs = lib.mapAttrs (_: cfg: cfg.filesystems.data.sync) config.jstos.users;
-  snapshotCfgs = lib.mapAttrs (_: cfg: cfg.filesystems.data.snapshot) config.jstos.users;
+  syncCfgs = lib.mapAttrs (_: cfg: cfg.data.sync) config.jstos.users;
+  snapshotCfgs = lib.mapAttrs (_: cfg: cfg.data.snapshot) config.jstos.users;
 in
 lib.mkMerge [
   {
@@ -14,7 +14,7 @@ lib.mkMerge [
       (
         { name, ... }:
         {
-          options.filesystems.data = {
+          options.data = {
             sync = {
               client = {
                 enable = lib.mkOption {
