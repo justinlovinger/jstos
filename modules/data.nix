@@ -16,24 +16,15 @@ lib.mkMerge [
         {
           options.data = {
             sync = {
-              client = {
-                enable = lib.mkOption {
-                  type = lib.types.bool;
-                  default = false;
-                  description = ''
-                    Whether or not to sync the data directory
-                    with the remote server.
-                  '';
-                };
-                address = lib.mkOption {
-                  type = lib.types.str;
-                  example = "255.255.255.255";
-                  description = ''
-                    Address of server to sync to.
-                  '';
-                };
+              address = lib.mkOption {
+                type = lib.types.str;
+                example = "255.255.255.255";
+                description = ''
+                  Address of server to sync to.
+                '';
               };
-              server.enable = lib.mkEnableOption "data sync server";
+              client.enable = lib.mkEnableOption "syncing data with the server at `address`";
+              server.enable = lib.mkEnableOption "syncing data with this machine";
             };
 
             snapshot = {
@@ -80,7 +71,7 @@ lib.mkMerge [
                 data = {
                   roots = [
                     "/home/${user}/data"
-                    "ssh://${cfg.client.address}//home/${user}/data"
+                    "ssh://${cfg.address}//home/${user}/data"
                   ];
                   stateDirectory = "${config.home.homeDirectory}/.unison"; # Home Manager uses a different default than upstream.
                   commandOptions = {

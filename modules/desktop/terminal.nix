@@ -69,22 +69,23 @@ in
           };
 
           remote = {
+            address = lib.mkOption {
+              type = lib.types.str;
+              example = "255.255.255.255";
+              description = ''
+                Address of server to remote to.
+                Unneeded if client binding is disabled.
+              '';
+            };
+
             client = {
               enable = lib.mkEnableOption "remote shell client";
               binding = lib.mkOption {
                 type = lib.types.nullOr lib.types.str;
                 default = "Super+Control+Shift return";
                 description = ''
-                  Binding to open remote client to the client address.
+                  Binding to open remote client to `address`.
                   Disable binding by setting to `null`.
-                '';
-              };
-              address = lib.mkOption {
-                type = lib.types.str;
-                example = "255.255.255.255";
-                description = ''
-                  Address of server for binding.
-                  Unneeded if binding is disabled.
                 '';
               };
             };
@@ -105,10 +106,10 @@ in
 
         config.desktop.windowManager.bindings =
           let
-            remoteClientCfg = config.desktop.terminal.remote.client;
+            remoteCfg = config.desktop.terminal.remote;
           in
-          lib.mkIf (remoteClientCfg.enable && remoteClientCfg.binding != null) {
-            ${remoteClientCfg.binding}.normal.command = "spawn '${moshWindow} ${remoteClientCfg.address}'";
+          lib.mkIf (remoteCfg.client.enable && remoteCfg.client.binding != null) {
+            ${remoteCfg.client.binding}.normal.command = "spawn '${moshWindow} ${remoteCfg.address}'";
           };
       }
     )
