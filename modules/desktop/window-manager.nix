@@ -78,6 +78,49 @@ in
               Swap behavior of Caps Lock and Esc.
             '';
           };
+
+          status = {
+            battery = {
+              show = lib.mkEnableOption "showing battery status";
+              path = lib.mkOption {
+                type = lib.types.path;
+                default = "/sys/class/power_supply/BAT%d/uevent";
+                description = ''
+                  Path to battery `uevent`.
+                '';
+              };
+            };
+            ethernet = {
+              show = lib.mkEnableOption "showing ethernet status";
+              name = lib.mkOption {
+                type = lib.types.str;
+                default = "_first_";
+                description = ''
+                  Name of the ethernet interface.
+                '';
+              };
+            };
+            mobileData = {
+              show = lib.mkEnableOption "showing mobile data status";
+              name = lib.mkOption {
+                type = lib.types.str;
+                default = "wwu1i4";
+                description = ''
+                  Name of the mobile data interface.
+                '';
+              };
+            };
+            wifi = {
+              show = lib.mkEnableOption "showing wireless status";
+              name = lib.mkOption {
+                type = lib.types.str;
+                default = "_first_";
+                description = ''
+                  Name of the wifi interface.
+                '';
+              };
+            };
+          };
         };
 
         config.desktop.windowManager = {
@@ -444,6 +487,101 @@ in
           Environment = "PATH=/bin"; # `i3bar-river` calls `sh` to run its `command`.
           ExecStart = toString (lib.getExe config.programs.i3bar-river.package);
           Restart = "always";
+        };
+      };
+
+      programs.i3status = {
+        enable = true;
+        enableDefault = false;
+
+        general = with colors.hex; {
+          output_format = "i3bar";
+          colors = true;
+          color_good = fg.normal;
+          color_degraded = fg.yellow;
+          color_bad = fg.red;
+          color_separator = bg.normal;
+          interval = 1;
+        };
+
+        modules = {
+          "ethernet ${cfg.status.ethernet.name}" = lib.mkIf cfg.status.ethernet.show {
+            position = 1;
+            settings = {
+              format_up = "󰈁 %speed";
+              format_down = "󰈂";
+            };
+          };
+
+          "wireless ${cfg.status.wifi.name}" = lib.mkIf cfg.status.wifi.show {
+            position = 2;
+            settings = {
+              format_up = "󰖩 %essid (%quality)";
+              format_down = "󰖪";
+            };
+          };
+
+          "wireless ${cfg.status.mobileData.name}" = lib.mkIf cfg.status.mobileData.show {
+            position = 3;
+            settings = {
+              format_up = "󰒢";
+              format_down = "󰞃";
+            };
+          };
+
+          "disk /" = {
+            position = 4;
+            settings = {
+              format = "󰋊 %avail";
+            };
+          };
+
+          "battery all" = lib.mkIf cfg.status.battery.show {
+            position = 5;
+            settings = {
+              format = "%status %percentage %remaining";
+              format_down = "󱉝";
+              status_chr = "󰂄";
+              status_bat = "󰁾";
+              status_unk = "󰂑";
+              status_full = "󰁹";
+              status_idle = "󰁹";
+              integer_battery_capacity = true;
+              path = cfg.status.battery.path;
+              threshold_type = "percentage";
+              low_threshold = 16;
+            };
+          };
+
+          cpu_usage = {
+            position = 6;
+            settings = {
+              format = "󰘚 %usage";
+            };
+          };
+
+          memory = {
+            position = 7;
+            settings = {
+              format = "󰍛 %available";
+              threshold_degraded = "2G";
+            };
+          };
+
+          "tztime local" = {
+            position = 8;
+            settings = {
+              format = "%Y-%m-%d %H:%M:%S";
+            };
+          };
+
+          "volume master" = {
+            position = 9;
+            settings = {
+              format = "󰕾 %volume";
+              format_muted = "󰖁 %volume";
+            };
+          };
         };
       };
 
