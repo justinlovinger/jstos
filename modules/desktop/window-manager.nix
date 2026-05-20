@@ -460,6 +460,159 @@ in
         };
       };
 
+      programs.rofi = {
+        enable = true;
+
+        # See <https://github.com/davatorium/rofi/blob/next/doc/default_theme.rasi>
+        # for configuration of theme.
+        theme =
+          let
+            inherit (config.lib.formats.rasi) mkLiteral;
+          in
+          with colors.hex;
+          {
+            "*" = {
+              background-color = mkLiteral bg.normal;
+              border-color = mkLiteral bg.faded;
+            };
+            element = {
+              padding = mkLiteral "2px";
+              spacing = mkLiteral "5px";
+              border = mkLiteral "0";
+              cursor = mkLiteral "pointer";
+            };
+            "element normal.normal" = {
+              background-color = mkLiteral bg.normal;
+              text-color = mkLiteral fg.normal;
+            };
+            "element normal.urgent" = {
+              background-color = mkLiteral bg.normal;
+              text-color = mkLiteral fg.red;
+            };
+            "element normal.active" = {
+              background-color = mkLiteral bg.normal;
+              text-color = mkLiteral fg.blue;
+            };
+            "element selected.normal" = {
+              background-color = mkLiteral fg.normal;
+              text-color = mkLiteral bg.normal;
+            };
+            "element selected.urgent" = {
+              background-color = mkLiteral fg.red;
+              text-color = mkLiteral bg.normal;
+            };
+            "element selected.active" = {
+              background-color = mkLiteral fg.blue;
+              text-color = mkLiteral bg.normal;
+            };
+            "element alternate.normal" = {
+              background-color = mkLiteral bg.faded;
+              text-color = mkLiteral fg.normal;
+            };
+            "element alternate.urgent" = {
+              background-color = mkLiteral bg.faded;
+              text-color = mkLiteral fg.red;
+            };
+            "element alternate.active" = {
+              background-color = mkLiteral bg.faded;
+              text-color = mkLiteral fg.blue;
+            };
+            element-text = {
+              background-color = mkLiteral "rgba ( 0, 0, 0, 0 % )";
+              text-color = mkLiteral "inherit";
+              highlight = mkLiteral "inherit";
+              cursor = mkLiteral "inherit";
+            };
+            element-icon = {
+              background-color = mkLiteral "rgba ( 0, 0, 0, 0 % )";
+              size = mkLiteral "1.0000em";
+              text-color = mkLiteral "inherit";
+              cursor = mkLiteral "inherit";
+            };
+            window = {
+              padding = mkLiteral "5";
+              background-color = mkLiteral bg.normal;
+              border = mkLiteral "1";
+            };
+            mainbox = {
+              padding = mkLiteral "0";
+              border = mkLiteral "0";
+            };
+            message = {
+              padding = mkLiteral "2px";
+              border-color = mkLiteral fg.normal;
+              border = mkLiteral "2px solid 0px 0px";
+            };
+            textbox = {
+              text-color = mkLiteral fg.normal;
+            };
+            listview = {
+              padding = mkLiteral "2px 0px 0px";
+              scrollbar = mkLiteral "true";
+              border-color = mkLiteral fg.normal;
+              spacing = mkLiteral "0";
+              fixed-height = mkLiteral "0";
+              border = mkLiteral "2px solid 0px 0px";
+            };
+            scrollbar = {
+              width = mkLiteral "4px";
+              padding = mkLiteral "0px 0px 0px 2px";
+              handle-width = mkLiteral "8px";
+              border = mkLiteral "0";
+              handle-color = mkLiteral fg.normal;
+            };
+            sidebar = {
+              border-color = mkLiteral fg.normal;
+              border = mkLiteral "2px solid 0px 0px";
+            };
+            button = {
+              spacing = mkLiteral "0";
+              text-color = mkLiteral fg.normal;
+              cursor = mkLiteral "pointer";
+            };
+            "button selected" = {
+              background-color = mkLiteral fg.normal;
+              text-color = mkLiteral bg.normal;
+            };
+            "num-filtered-rows, num-rows" = {
+              text-color = mkLiteral fg.faded;
+              expand = mkLiteral "false";
+            };
+            textbox-num-sep = {
+              text-color = mkLiteral fg.faded;
+              expand = mkLiteral "false";
+              str = mkLiteral ''"/"'';
+            };
+            inputbar = {
+              padding = mkLiteral "0px 2px";
+              spacing = mkLiteral "0px";
+              text-color = mkLiteral fg.normal;
+              children = mkLiteral "[ prompt,textbox-prompt-colon,entry, num-filtered-rows, textbox-num-sep, num-rows, case-indicator ]";
+            };
+            case-indicator = {
+              spacing = mkLiteral "0";
+              text-color = mkLiteral fg.normal;
+            };
+            entry = {
+              spacing = mkLiteral "0";
+              text-color = mkLiteral fg.normal;
+              placeholder-color = mkLiteral fg.faded;
+              placeholder = mkLiteral ''"Type to filter"'';
+              cursor = mkLiteral "text";
+            };
+            prompt = {
+              spacing = mkLiteral "0";
+              text-color = mkLiteral fg.normal;
+            };
+            textbox-prompt-colon = {
+              margin = mkLiteral "0px 0.3000em 0.0000em 0.0000em";
+              expand = mkLiteral "false";
+              str = mkLiteral ''":"'';
+              text-color = mkLiteral "inherit";
+            };
+          };
+      };
+
       services.way-displays = {
         enable = true;
         settings = {
