@@ -75,7 +75,21 @@
     };
   };
 
-  config = lib.mkIf config.jstos.documentation.enable {
-    environment.systemPackages = [ jstos-pkgs.jstos-manpage ];
+  config = {
+    environment.systemPackages = lib.mkIf config.jstos.documentation.enable [
+      jstos-pkgs.jstos-manpage
+    ];
+
+    home-manager.users = lib.mapAttrs (
+      user: cfg:
+      lib.mkIf cfg.enable {
+        # Other options may depend on these.
+        home = {
+          homeDirectory = "/home/${user}";
+          stateVersion = "21.05";
+          username = user;
+        };
+      }
+    ) config.jstos.users;
   };
 }
