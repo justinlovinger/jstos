@@ -31,6 +31,155 @@
       colors = jstos.colors;
     in
     lib.mkIf cfg.enable {
+      programs.dircolors = {
+        enable = true;
+
+        settings =
+          with colors.term;
+          rec {
+            # Set-user-ID, set-group-ID, and capabilities are potential security risks.
+            SETUID = fg.yellow; # `u+s`. File that runs as the user who made it, instead of the one who executes it.
+            SETGID = fg.yellow; # `g+s`. File that runs as the group who made it, instead of the one who executes it.
+            CAPABILITY = fg.yellow; # File that runs with one or more elevated permissions, regardless of who runs it.
+
+            # Common special files should be easy to differentiate from regular files
+            # without standing out _too_ much.
+            LINK = "04";
+            ORPHAN = "${LINK};${fg.red}"; # Broken links should be easy to differentiate.
+            EXEC = "01";
+            DIR = "03";
+            OTHER_WRITABLE = "${DIR};${bg.faded}"; # Directory that is other-writable (`o+w`).
+
+            SOCK = "${LINK};${bg.faded}";
+            DOOR = "${LINK};${bg.faded}";
+            BLK = bg.faded;
+            CHR = bg.faded;
+
+            # A sticky directory is one where files can only be deleted,
+            # renamed,
+            # or moved by their owner,
+            # the directory owner,
+            # or root.
+            # Sticky directories have _more_ security.
+            # They don't need to stand out more.
+            STICKY_OTHER_WRITABLE = OTHER_WRITABLE; # Directory that is other-writable and sticky (`+t,o+w`).
+            STICKY = DIR; # Directory that is sticky (`+t`).
+
+            # Temporary files are less important.
+            "*~" = fg.faded;
+            ".bak" = fg.faded;
+            ".org" = fg.faded;
+            ".orig" = fg.faded;
+            ".swp" = fg.faded;
+            ".tmp" = fg.faded;
+          }
+          # Some files have colors by default.
+          // (lib.listToAttrs (
+            map
+              (name: {
+                inherit name;
+                value = fg.normal;
+              })
+              [
+                ".tar"
+                ".tgz"
+                ".arc"
+                ".arj"
+                ".taz"
+                ".lha"
+                ".lz4"
+                ".lzh"
+                ".lzma"
+                ".tlz"
+                ".txz"
+                ".tzo"
+                ".t7z"
+                ".zip"
+                ".z"
+                ".dz"
+                ".gz"
+                ".lrz"
+                ".lz"
+                ".lzo"
+                ".xz"
+                ".zst"
+                ".tzst"
+                ".bz2"
+                ".bz"
+                ".tbz"
+                ".tbz2"
+                ".tz"
+                ".deb"
+                ".rpm"
+                ".jar"
+                ".war"
+                ".ear"
+                ".sar"
+                ".rar"
+                ".alz"
+                ".ace"
+                ".zoo"
+                ".cpio"
+                ".7z"
+                ".rz"
+                ".cab"
+                ".wim"
+                ".swm"
+                ".dwm"
+                ".esd"
+                ".jpg"
+                ".jpeg"
+                ".mjpg"
+                ".mjpeg"
+                ".gif"
+                ".bmp"
+                ".pbm"
+                ".pgm"
+                ".ppm"
+                ".tga"
+                ".xbm"
+                ".xpm"
+                ".tif"
+                ".tiff"
+                ".png"
+                ".svg"
+                ".svgz"
+                ".mng"
+                ".pcx"
+                ".mov"
+                ".mpg"
+                ".mpeg"
+                ".m2v"
+                ".mkv"
+                ".webm"
+                ".ogm"
+                ".mp4"
+                ".m4v"
+                ".mp4v"
+                ".vob"
+                ".qt"
+                ".nuv"
+                ".wmv"
+                ".asf"
+                ".rm"
+                ".rmvb"
+                ".flc"
+                ".avi"
+                ".fli"
+                ".flv"
+                ".gl"
+                ".dl"
+                ".xcf"
+                ".xwd"
+                ".yuv"
+                ".cgm"
+                ".emf"
+                ".ogv"
+                ".ogx"
+              ]
+          ));
+      };
+
       programs.fzf = rec {
         enable = true;
         defaultCommand = "${lib.getExe pkgs.fd} --strip-cwd-prefix --color always";
