@@ -5,6 +5,8 @@
   ...
 }:
 let
+  config' = config;
+
   osk = "${lib.getExe' wvkbd "wvkbd-deskintl"}";
   oskState = ''$"($env.XDG_RUNTIME_DIR)/osk"'';
 
@@ -38,7 +40,9 @@ in
         options.desktop.osk = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = false;
+            default =
+              config.enable && config'.jstos.device.has.regularUsage && !config'.jstos.device.has.keyboard;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage && !config.jstos.device.has.keyboard";
             description = ''
               Whether to enable the on-screen-keyboard.
             '';
@@ -46,7 +50,7 @@ in
 
           binding = lib.mkOption {
             type = lib.types.str;
-            example = "None XF86AudioRaiseVolume";
+            default = "None XF86AudioRaiseVolume";
             description = ''
               Binding to toggle OSK.
             '';

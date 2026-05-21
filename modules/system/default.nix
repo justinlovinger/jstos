@@ -1,20 +1,7 @@
-{
-  config,
-  lib,
-  ...
-}:
+{ ... }:
 {
   imports = [
     ./memory.nix
     ./ssh.nix
   ];
-
-  options.jstos.system.enable = lib.mkOption {
-    type = lib.types.bool;
-    default = config.jstos.enable;
-    defaultText = lib.literalExpression "config.jstos.enable";
-    description = ''
-      Whether to enable JstOS defaults for this system.
-    '';
-  };
 }

@@ -6,8 +6,9 @@
   ...
 }:
 let
+  config' = config;
+
   cfgs = map (jstos: jstos.desktop.windowManager) (lib.attrValues config.jstos.users);
-  osConfig = config;
 in
 {
   jstos.userModules = [
@@ -17,8 +18,9 @@ in
         options.desktop.windowManager = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = config.desktop.enable;
-            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
+            default =
+              config.enable && config'.jstos.device.has.regularUsage && config'.jstos.device.has.display;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.display";
             description = ''
               Whether to enable the window manager.
             '';
@@ -81,7 +83,14 @@ in
 
           status = {
             battery = {
-              show = lib.mkEnableOption "showing battery status";
+              show = lib.mkOption {
+                type = lib.types.bool;
+                default = config'.jstos.device.has.battery;
+                defaultText = lib.literalExpression "config.jstos.device.has.battery";
+                description = ''
+                  Whether to enable showing battery status.
+                '';
+              };
               path = lib.mkOption {
                 type = lib.types.path;
                 default = "/sys/class/power_supply/BAT%d/uevent";
@@ -91,7 +100,14 @@ in
               };
             };
             ethernet = {
-              show = lib.mkEnableOption "showing ethernet status";
+              show = lib.mkOption {
+                type = lib.types.bool;
+                default = config'.jstos.device.has.ethernet;
+                defaultText = lib.literalExpression "config.jstos.device.has.battery";
+                description = ''
+                  Whether to enable showing ethernet status.
+                '';
+              };
               name = lib.mkOption {
                 type = lib.types.str;
                 default = "_first_";
@@ -101,7 +117,14 @@ in
               };
             };
             mobileData = {
-              show = lib.mkEnableOption "showing mobile data status";
+              show = lib.mkOption {
+                type = lib.types.bool;
+                default = config'.jstos.device.has.mobileData;
+                defaultText = lib.literalExpression "config.jstos.device.has.mobileData";
+                description = ''
+                  Whether to enable showing mobile data status.
+                '';
+              };
               name = lib.mkOption {
                 type = lib.types.str;
                 default = "wwu1i4";
@@ -111,7 +134,14 @@ in
               };
             };
             wifi = {
-              show = lib.mkEnableOption "showing wireless status";
+              show = lib.mkOption {
+                type = lib.types.bool;
+                default = config'.jstos.device.has.wifi;
+                defaultText = lib.literalExpression "config.jstos.device.has.wifi";
+                description = ''
+                  Whether to enable showing wifi status.
+                '';
+              };
               name = lib.mkOption {
                 type = lib.types.str;
                 default = "_first_";
@@ -416,7 +446,7 @@ in
               );
               wlrctl = "${lib.getExe pkgs.wlrctl}";
 
-              homeManagerConfig = osConfig.home-manager.users.${name};
+              homeManagerConfig = config'.home-manager.users.${name};
             in
             builtins.mapAttrs (_: value: lib.mkDefault value) (
               normalBindings // commonBindings // tagBindings // mouseBindings

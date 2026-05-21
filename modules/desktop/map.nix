@@ -5,6 +5,8 @@
   ...
 }:
 let
+  config' = config;
+
   mepo = pkgs.runCommandLocal "mepo-with-better-location" { } ''
     cp -rs ${mepoWithoutUserpin} $out
     chmod -R u+w $out
@@ -93,17 +95,25 @@ let
 in
 {
   jstos.userModules = [
-    {
-      options.desktop.map = {
-        enable = lib.mkOption {
-          type = lib.types.bool;
-          default = false;
-          description = ''
-            Whether to enable the map.
-          '';
+    (
+      { config, ... }:
+      {
+        options.desktop.map = {
+          enable = lib.mkOption {
+            type = lib.types.bool;
+            default =
+              config.enable
+              && config'.jstos.device.has.regularUsage
+              && config'.jstos.device.has.display
+              && config'.jstos.device.has.gps;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.display && config.jstos.device.has.gps";
+            description = ''
+              Whether to enable the map.
+            '';
+          };
         };
-      };
-    }
+      }
+    )
   ];
 
   services.geoclue2.enable = lib.mkIf (builtins.any (cfg: cfg.enable) cfgs) true;

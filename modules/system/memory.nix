@@ -10,8 +10,8 @@ in
   options.jstos.system.memory.compression = {
     enable = lib.mkOption {
       type = lib.types.bool;
-      default = config.jstos.system.enable;
-      defaultText = lib.literalExpression "config.jstos.system.enable";
+      default = config.jstos.enable;
+      defaultText = lib.literalExpression "config.jstos.enable";
       description = ''
         Whether to compress memory.
       '';

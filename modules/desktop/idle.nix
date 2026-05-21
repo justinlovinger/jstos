@@ -4,6 +4,9 @@
   pkgs,
   ...
 }:
+let
+  config' = config;
+in
 {
   jstos.userModules = [
     (
@@ -12,8 +15,8 @@
         options.desktop.idle = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = config.desktop.enable;
-            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
+            default = config.enable && (config'.jstos.device.has.display || !config'.jstos.device.is.server);
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && (config.jstos.device.has.display || !config.jstos.device.is.server)";
             description = ''
               Whether to enable idle timeouts.
             '';
@@ -22,9 +25,10 @@
           displays = {
             enable = lib.mkOption {
               type = lib.types.bool;
-              default = true;
+              default = config'.jstos.device.has.display;
+              defaultText = lib.literalExpression "config.jstos.device.has.display";
               description = ''
-                Whether or not to blank displays.
+                Whether to enable blanking displays.
               '';
             };
 
@@ -38,7 +42,16 @@
           };
 
           lock = {
-            enable = lib.mkEnableOption "lock";
+            # Without an OSK on the lockscreen,
+            # users cannot unlock without a physical keyboard.
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = config'.jstos.device.has.display && config'.jstos.device.has.keyboard;
+              defaultText = lib.literalExpression "config.jstos.device.has.display && config.jstos.device.has.keyboard";
+              description = ''
+                Whether to enable locking.
+              '';
+            };
 
             timeout = lib.mkOption {
               type = lib.types.int;
@@ -49,11 +62,11 @@
               '';
             };
 
-            afterSleep = lib.mkOption {
+            afterSuspend = lib.mkOption {
               type = lib.types.bool;
               default = true;
               description = ''
-                Whether or not to lock if system sleeps for `lock.timeout`.
+                Whether or not to lock if system suspends for `lock.timeout`.
               '';
             };
 
@@ -116,7 +129,14 @@
           };
 
           suspend = {
-            enable = lib.mkEnableOption "suspend";
+            enable = lib.mkOption {
+              type = lib.types.bool;
+              default = !config'.jstos.device.is.server;
+              defaultText = lib.literalExpression "!config.jstos.device.is.server";
+              description = ''
+                Whether to enable suspending.
+              '';
+            };
 
             timeout = lib.mkOption {
               type = lib.types.int;
@@ -154,10 +174,10 @@
         exit $swaylock_ret
       '';
 
-      lockBeforeSleepScript = pkgs.writeShellScript "lock-before-sleep.sh" ''
+      lockBeforeSuspendScript = pkgs.writeShellScript "lock-before-suspend.sh" ''
         ${lib.getExe' pkgs.coreutils "date"} +%s > "${timestampFile}"
       '';
-      lockAfterSleepScript = pkgs.writeShellScript "lock-after-sleep.sh" ''
+      lockAfterSuspendScript = pkgs.writeShellScript "lock-after-suspend.sh" ''
         read -r before < "${timestampFile}"
         current=$( ${lib.getExe' pkgs.coreutils "date"} +%s )
         elapsed=$(( current - before ))
@@ -166,7 +186,7 @@
           exec ${lockCommand}
         fi
       '';
-      timestampFile = "$XDG_RUNTIME_DIR/lock-after-sleep-timestamp";
+      timestampFile = "$XDG_RUNTIME_DIR/lock-after-suspend-timestamp";
 
       disableAll =
         state:
@@ -236,15 +256,15 @@
               };
             }
 
-            (lib.mkIf cfg.lock.afterSleep {
+            (lib.mkIf cfg.lock.afterSuspend {
               services.swayidle.events = [
                 {
                   event = "before-sleep";
-                  command = builtins.toString lockBeforeSleepScript;
+                  command = builtins.toString lockBeforeSuspendScript;
                 }
                 {
                   event = "after-resume";
-                  command = builtins.toString lockAfterSleepScript;
+                  command = builtins.toString lockAfterSuspendScript;
                 }
               ];
             })

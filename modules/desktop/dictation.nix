@@ -4,6 +4,9 @@
   pkgs,
   ...
 }:
+let
+  config' = config;
+in
 {
   jstos.userModules = [
     (
@@ -15,7 +18,12 @@
         options.desktop.dictation = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = false;
+            default =
+              config.enable
+              && config'.jstos.device.has.regularUsage
+              && config'.jstos.device.has.display
+              && config'.jstos.device.has.microphone;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.display && config.jstos.device.has.microphone";
             description = ''
               Whether to enable dictation.
             '';

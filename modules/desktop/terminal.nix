@@ -5,6 +5,8 @@
   ...
 }:
 let
+  config' = config;
+
   cfgs = map (jstos: jstos.desktop.terminal) (lib.attrValues config.jstos.users);
   serverEnabled = lib.any (cfg: cfg.remote.server.enable) cfgs;
 
@@ -53,8 +55,9 @@ in
         options.desktop.terminal = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = config.desktop.enable;
-            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
+            default =
+              config.enable && config'.jstos.device.has.regularUsage && config'.jstos.device.has.display;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.display";
             description = ''
               Whether to enable the terminal.
             '';
@@ -134,7 +137,7 @@ in
           shellWindow
           terminalWindow
 
-          (lib.mkIf jstos.shell.enable (
+          (lib.mkIf jstos.shell.shell.enable (
             # As of 2022-12-12,
             # `nu -i -c` fails to automatically source `config.nu`,
             # <https://github.com/nushell/nushell/issues/7442>.

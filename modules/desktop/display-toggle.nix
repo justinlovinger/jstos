@@ -1,8 +1,12 @@
 {
+  config,
   lib,
   pkgs,
   ...
 }:
+let
+  config' = config;
+in
 {
   jstos.userModules = [
     (
@@ -14,8 +18,9 @@
         options.desktop.displayToggle = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = config.desktop.enable;
-            defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.enable";
+            default =
+              config.enable && config'.jstos.device.has.regularUsage && config'.jstos.device.has.builtInDisplay;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.builtInDisplay";
             description = ''
               Whether to enable the toggle-display key.
             '';
@@ -23,7 +28,7 @@
 
           binding = lib.mkOption {
             type = lib.types.str;
-            example = "None XF86AudioRaiseVolume";
+            default = "None XF86AudioLowerVolume";
             description = ''
               Binding to toggle display.
             '';

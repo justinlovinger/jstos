@@ -5,6 +5,9 @@
   pkgs,
   ...
 }:
+let
+  config' = config;
+in
 {
   jstos.userModules = [
     (
@@ -13,8 +16,8 @@
         options.shell.shell = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = config.shell.enable;
-            defaultText = lib.literalExpression "config.jstos.users.<name>.shell.enable";
+            default = config.enable && config'.jstos.device.has.regularUsage;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage";
             description = ''
               Whether to enable the shell.
             '';

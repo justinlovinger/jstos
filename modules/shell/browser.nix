@@ -4,6 +4,9 @@
   pkgs,
   ...
 }:
+let
+  config' = config;
+in
 {
   jstos.userModules = [
     (
@@ -12,8 +15,8 @@
         options.shell.browser = {
           enable = lib.mkOption {
             type = lib.types.bool;
-            default = config.shell.enable;
-            defaultText = lib.literalExpression "config.jstos.users.<name>.shell.enable";
+            default = config.enable && config'.jstos.device.has.regularUsage;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage";
             description = ''
               Whether to enable the shell browser.
             '';
@@ -57,7 +60,7 @@
         };
       };
 
-      programs.nushell.extraConfig = lib.mkIf jstos.shell.enable ''
+      programs.nushell.extraConfig = lib.mkIf jstos.shell.shell.enable ''
         def ? [...query: string] {
           cha $"https://lite.duckduckgo.com/lite?kp=-1&kd=-1&q=($query | str join ' ' | url encode --all)"
         }
