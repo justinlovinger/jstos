@@ -112,6 +112,7 @@
                 modules = [
                   { _module.check = false; }
                   ./modules
+                  ./data.nix
                   ./go-game
                   ./llm/module.nix
                 ];
@@ -174,6 +175,7 @@
 
           imports = [
             ./modules
+            ./data.nix
             ./go-game
             inputs.llm.nixosModules.default
 
