@@ -470,7 +470,7 @@ in
       riverColor = s: "0x${s}";
     in
     { config, ... }:
-    {
+    lib.mkIf cfg.enable {
       home.packages = with pkgs; [ bibata-cursors ];
 
       programs.i3bar-river = {
