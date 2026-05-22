@@ -462,6 +462,9 @@ in
     extraPackages = lib.mkDefault [ ];
   };
 
+  # The status bar uses custom glyphs.
+  fonts.packages = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) [ pkgs.material-design-icons ];
+
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
