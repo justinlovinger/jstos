@@ -8,9 +8,17 @@
   imports = [
     ./colors.nix
     ./data.nix
-    ./desktop
+    ./dictation.nix
+    ./display-toggle.nix
+    ./editor.nix
+    ./idle.nix
+    ./map.nix
+    ./osk.nix
     ./shell
+    ./shell-browser.nix
     ./system
+    ./terminal.nix
+    ./window-manager.nix
   ];
 
   options.jstos = {

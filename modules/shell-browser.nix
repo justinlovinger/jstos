@@ -12,7 +12,7 @@ in
     (
       { config, ... }:
       {
-        options.shell.browser = {
+        options.shellBrowser = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.enable && config'.jstos.device.has.regularUsage;
@@ -29,7 +29,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.shell.browser;
+      cfg = jstos.shellBrowser;
     in
     lib.mkIf cfg.enable {
       home.packages = [
@@ -60,7 +60,7 @@ in
         };
       };
 
-      programs.nushell.extraConfig = lib.mkIf jstos.shell.shell.enable ''
+      programs.nushell.extraConfig = lib.mkIf jstos.shell.enable ''
         def ? [...query: string] {
           cha $"https://lite.duckduckgo.com/lite?kp=-1&kd=-1&q=($query | str join ' ' | url encode --all)"
         }

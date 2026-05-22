@@ -13,7 +13,7 @@ in
     (
       { config, ... }:
       {
-        options.shell.editor = {
+        options.editor = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.enable && config'.jstos.device.has.regularUsage;
@@ -38,7 +38,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.shell.editor;
+      cfg = jstos.editor;
       colors = jstos.colors;
     in
     lib.mkMerge [

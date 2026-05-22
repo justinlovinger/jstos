@@ -12,7 +12,7 @@ in
     (
       { config, ... }:
       {
-        options.desktop.idle = {
+        options.idle = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default = config.enable && (config'.jstos.device.has.display || !config'.jstos.device.is.server);
@@ -55,8 +55,8 @@ in
 
             timeout = lib.mkOption {
               type = lib.types.int;
-              default = config.desktop.idle.displays.timeout + 15;
-              defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.idle.displays.timeout + 15";
+              default = config.idle.displays.timeout + 15;
+              defaultText = lib.literalExpression "config.jstos.users.<name>.idle.displays.timeout + 15";
               description = ''
                 Idle seconds before session is locked.
               '';
@@ -140,8 +140,8 @@ in
 
             timeout = lib.mkOption {
               type = lib.types.int;
-              default = config.desktop.idle.displays.timeout + 30;
-              defaultText = lib.literalExpression "config.jstos.users.<name>.desktop.idle.displays.timeout + 30";
+              default = config.idle.displays.timeout + 30;
+              defaultText = lib.literalExpression "config.jstos.users.<name>.idle.displays.timeout + 30";
               description = ''
                 Idle seconds before machine suspends.
               '';
@@ -155,7 +155,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.desktop.idle;
+      cfg = jstos.idle;
 
       lockCommand = "systemctl --user start lock.service";
       lockScript = pkgs.writeShellScript "lock.sh" ''

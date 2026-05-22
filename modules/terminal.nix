@@ -7,7 +7,7 @@
 let
   config' = config;
 
-  cfgs = map (jstos: jstos.desktop.terminal) (lib.attrValues config.jstos.users);
+  cfgs = map (jstos: jstos.terminal) (lib.attrValues config.jstos.users);
   serverEnabled = lib.any (cfg: cfg.remote.server.enable) cfgs;
 
   moshWindow = pkgs.writeShellScriptBin "mosh-window" ''
@@ -52,7 +52,7 @@ in
     (
       { config, ... }:
       {
-        options.desktop.terminal = {
+        options.terminal = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default =
@@ -107,9 +107,9 @@ in
           };
         };
 
-        config.desktop.windowManager.bindings =
+        config.windowManager.bindings =
           let
-            remoteCfg = config.desktop.terminal.remote;
+            remoteCfg = config.terminal.remote;
           in
           lib.mkIf (remoteCfg.client.enable && remoteCfg.client.binding != null) {
             ${remoteCfg.client.binding}.normal.command = "spawn '${moshWindow} ${remoteCfg.address}'";
@@ -127,7 +127,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.desktop.terminal;
+      cfg = jstos.terminal;
       colors = jstos.colors;
     in
     { config, ... }:
@@ -137,7 +137,7 @@ in
           shellWindow
           terminalWindow
 
-          (lib.mkIf jstos.shell.shell.enable (
+          (lib.mkIf jstos.shell.enable (
             # As of 2022-12-12,
             # `nu -i -c` fails to automatically source `config.nu`,
             # <https://github.com/nushell/nushell/issues/7442>.

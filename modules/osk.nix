@@ -34,10 +34,10 @@ in
     (
       { config, ... }:
       let
-        cfg = config.desktop.osk;
+        cfg = config.osk;
       in
       {
-        options.desktop.osk = {
+        options.osk = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default =
@@ -107,7 +107,7 @@ in
           };
         };
 
-        config.desktop.windowManager.bindings = lib.mkIf cfg.enable {
+        config.windowManager.bindings = lib.mkIf cfg.enable {
           ${cfg.binding} = {
             normal.command = "spawn ${cfg.command}";
             locked.enable = true;
@@ -120,7 +120,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.desktop.osk;
+      cfg = jstos.osk;
     in
     { config, ... }:
     lib.mkIf cfg.enable {

@@ -12,10 +12,10 @@ in
     (
       { config, ... }:
       let
-        cfg = config.desktop.displayToggle;
+        cfg = config.displayToggle;
       in
       {
-        options.desktop.displayToggle = {
+        options.displayToggle = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default =
@@ -94,7 +94,7 @@ in
           };
         };
 
-        config.desktop.windowManager.bindings = lib.mkIf cfg.enable {
+        config.windowManager.bindings = lib.mkIf cfg.enable {
           ${cfg.binding} = {
             normal.command = "spawn ${cfg.command}";
             locked.enable = true;

@@ -91,14 +91,14 @@ let
     }
   );
 
-  cfgs = map (jstos: jstos.desktop.map) (builtins.attrValues config.jstos.users);
+  cfgs = map (jstos: jstos.map) (builtins.attrValues config.jstos.users);
 in
 {
   jstos.userModules = [
     (
       { config, ... }:
       {
-        options.desktop.map = {
+        options.map = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default =
@@ -121,7 +121,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.desktop.map;
+      cfg = jstos.map;
     in
     lib.mkIf cfg.enable {
       home.packages = [ mepo ];

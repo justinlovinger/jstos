@@ -12,10 +12,10 @@ in
     (
       { config, ... }:
       let
-        cfg = config.desktop.dictation;
+        cfg = config.dictation;
       in
       {
-        options.desktop.dictation = {
+        options.dictation = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default =
@@ -58,7 +58,7 @@ in
           };
         };
 
-        config.desktop.windowManager.bindings = lib.mkIf cfg.enable {
+        config.windowManager.bindings = lib.mkIf cfg.enable {
           ${cfg.binding}.normal.command = "spawn ${cfg.command}";
         };
       }
@@ -68,7 +68,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.desktop.dictation;
+      cfg = jstos.dictation;
     in
     { config, ... }:
     lib.mkIf cfg.enable {

@@ -8,14 +8,14 @@
 let
   config' = config;
 
-  cfgs = map (jstos: jstos.desktop.windowManager) (lib.attrValues config.jstos.users);
+  cfgs = map (jstos: jstos.windowManager) (lib.attrValues config.jstos.users);
 in
 {
   jstos.userModules = [
     (
       { name, config, ... }:
       {
-        options.desktop.windowManager = {
+        options.windowManager = {
           enable = lib.mkOption {
             type = lib.types.bool;
             default =
@@ -153,7 +153,7 @@ in
           };
         };
 
-        config.desktop.windowManager = {
+        config.windowManager = {
           bindings =
             let
               normalBindings = {
@@ -468,7 +468,7 @@ in
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
-      cfg = jstos.desktop.windowManager;
+      cfg = jstos.windowManager;
       colors = jstos.colors;
       riverColor = s: "0x${s}";
     in
