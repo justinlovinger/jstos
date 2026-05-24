@@ -93,7 +93,7 @@ in
               };
               path = lib.mkOption {
                 type = lib.types.path;
-                default = "/sys/class/power_supply/BAT%d/uevent";
+                default = "/sys/class/power_supply/BAT0/uevent";
                 description = ''
                   Path to battery `uevent`.
                 '';
@@ -569,7 +569,7 @@ in
             };
           };
 
-          "battery all" = lib.mkIf cfg.status.battery.show {
+          "battery internal" = lib.mkIf cfg.status.battery.show {
             position = 5;
             settings = {
               format = "%status %percentage %remaining";
