@@ -326,16 +326,6 @@ in
                 "None XF86AudioNext".normal.command = "spawn '${lib.getExe pkgs.playerctl} next'";
                 "None XF86AudioPrev".normal.command = "spawn '${lib.getExe pkgs.playerctl} previous'";
 
-                # Screen brightness controls:
-                "None XF86MonBrightnessUp".normal = {
-                  command = "spawn 'brillo -A 3 -u 10000'";
-                  repeat = true;
-                };
-                "None XF86MonBrightnessDown".normal = {
-                  command = "spawn 'brillo -U 3 -u 10000'";
-                  repeat = true;
-                };
-
                 # We can add the following
                 # when river supports toggling.
                 # Alternatively,
