@@ -41,13 +41,12 @@ Add JstOS to your NixOS configuration flake:
 
 ## Usage
 
-Enable JstOS with `jstos.enable = true`,
-including documentation.
-Enable only documentation with `jstos.documentation.enable = true`.
+Enable documentation with `jstos.documentation.enable = true`.
 See `man jstos-configuration.nix` for all options
 after documentation is enabled.
 
-Sensible defaults can be enabled by configuring `jstos.device`.
+Sensible defaults can be enabled by setting `jstos.enable = true`
+and configuring `jstos.device`.
 For most machines,
 set one of `jstos.device.is.desktop`,
 `jstos.device.is.laptop`,

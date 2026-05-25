@@ -121,8 +121,8 @@
 
     documentation.enable = lib.mkOption {
       type = lib.types.bool;
-      default = config.jstos.enable;
-      defaultText = lib.literalExpression "config.jstos.enable";
+      default = config.jstos.enable && config.jstos.device.has.regularUsage;
+      defaultText = lib.literalExpression "config.jstos.enable && config.jstos.device.has.regularUsage";
       description = ''
         Whether to enable documentation for JstOS.
       '';
