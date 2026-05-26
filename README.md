@@ -41,7 +41,8 @@ Add JstOS to your NixOS configuration flake:
 
 ## Usage
 
-Enable documentation with `jstos.documentation.enable = true`.
+Enable JstOS by setting `jstos.enable = true`
+or enable only documentation by setting `jstos.documentation.enable = true`.
 See `man jstos-configuration.nix` for all options
 after documentation is enabled.
 
@@ -80,6 +81,12 @@ jstos = {
   users.john = { };
 };
 ```
+
+Enabling individual options
+without configuring the entire system as JstOS
+is also possible.
+Just enable the options
+without setting `jstos.enable = true`.
 
 ### Extensions
 
