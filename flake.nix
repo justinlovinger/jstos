@@ -165,29 +165,49 @@
               '';
         };
 
-      nixosModules.default =
-        { pkgs, ... }:
-        let
-          system = pkgs.stdenv.hostPlatform.system;
-        in
-        {
-          _module.args.jstos-pkgs = packages.${system};
+      nixosModules = rec {
+        default = jstos;
 
+        all = {
           imports = [
-            ./modules
-            ./data.nix
-            ./go-game
-            inputs.llm.nixosModules.default
-
-            inputs.home-manager.nixosModules.home-manager
-            inputs.wayland-pipewire-idle-inhibit.nixosModules.default
-            inputs.whisp-away.nixosModules.nixos
-          ];
-
-          home-manager.sharedModules = [
-            inputs.wayland-pipewire-idle-inhibit.homeModules.default
-            inputs.whisp-away.nixosModules.home-manager
+            jstos
+            data
+            goGame
+            llm
           ];
         };
+
+        jstos =
+          { pkgs, ... }:
+          let
+            system = pkgs.stdenv.hostPlatform.system;
+          in
+          {
+            _module.args.jstos-pkgs = packages.${system};
+
+            imports = [
+              inputs.home-manager.nixosModules.home-manager
+              inputs.wayland-pipewire-idle-inhibit.nixosModules.default
+              inputs.whisp-away.nixosModules.nixos
+
+              ./modules
+            ];
+
+            home-manager.sharedModules = [
+              inputs.wayland-pipewire-idle-inhibit.homeModules.default
+              inputs.whisp-away.nixosModules.home-manager
+            ];
+          };
+
+        data = {
+          imports = [ ./data.nix ];
+        };
+
+        goGame = {
+          imports = [ ./go-game ];
+        };
+
+        llm = inputs.llm.nixosModules.default;
+      };
     };
 }

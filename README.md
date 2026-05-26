@@ -80,3 +80,27 @@ jstos = {
   users.john = { };
 };
 ```
+
+### Extensions
+
+Additional extensions are available under `nixosModules`
+and must be imported separately,
+such as:
+
+```nix
+# ...
+
+nixosConfigurations.HOSTNAME = inputs.nixpkgs.lib.nixosSystem {
+  # ...
+  modules = [
+    # ...
+    inputs.jstos.nixosModules.default
+    inputs.jstos.nixosModules.data
+    inputs.jstos.nixosModules.go-game
+    inputs.jstos.nixosModules.llm
+  ];
+};
+```
+
+Alternatively,
+`inputs.jstos.nixosModules.all` can be imported to include JstOS and all extensions.

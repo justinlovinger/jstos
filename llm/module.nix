@@ -5,6 +5,8 @@
   ...
 }:
 let
+  config' = config;
+
   cfgs = map (jstos: jstos.llm) (builtins.attrValues config.jstos.users);
 
   modelsOption = lib.mkOption {
@@ -37,7 +39,14 @@ in
       { config, ... }:
       {
         options.llm = {
-          enable = lib.mkEnableOption "LLM usage";
+          enable = lib.mkOption {
+            type = lib.types.bool;
+            default = config.enable && config'.jstos.device.has.regularUsage;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage";
+            description = ''
+              Whether to enable the LLM.
+            '';
+          };
 
           defaultModel = {
             provider = lib.mkOption {

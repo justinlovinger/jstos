@@ -5,6 +5,8 @@
   ...
 }:
 let
+  config' = config;
+
   sabaki = pkgs.appimageTools.wrapType2 {
     pname = "sabaki";
     version = "0.52.2";
@@ -41,7 +43,18 @@ in
       { config, ... }:
       {
         options.goGame = {
-          enable = lib.mkEnableOption "Go";
+          enable = lib.mkOption {
+            type = lib.types.bool;
+            default =
+              config.enable
+              && config'.jstos.device.has.regularUsage
+              && config'.jstos.device.has.display
+              && pkgs.stdenv.hostPlatform.isx86_64; # Sabaki can run on AArch64, but we would need to update the package to support it.
+            defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.display && pkgs.stdenv.hostPlatform.isx86_64";
+            description = ''
+              Whether to enable Go (the game).
+            '';
+          };
 
           gnugo = {
             enable = lib.mkOption {
