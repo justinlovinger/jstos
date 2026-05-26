@@ -43,8 +43,11 @@ Add JstOS to your NixOS configuration flake:
 
 Enable JstOS by setting `jstos.enable = true`
 or enable only documentation by setting `jstos.documentation.enable = true`.
-See `man jstos-configuration.nix` for all options
+See `man jstos-configuration.nix` for options
 after documentation is enabled.
+Note,
+only options for enabled extensions are shown.
+See below for information on extensions.
 
 Sensible defaults can be enabled by setting `jstos.enable = true`
 and configuring `jstos.device`.
@@ -101,7 +104,7 @@ nixosConfigurations.HOSTNAME = inputs.nixpkgs.lib.nixosSystem {
   # ...
   modules = [
     # ...
-    inputs.jstos.nixosModules.default
+    inputs.jstos.nixosModules.jstos
     inputs.jstos.nixosModules.data
     inputs.jstos.nixosModules.go-game
     inputs.jstos.nixosModules.llm
