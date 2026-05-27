@@ -7,6 +7,8 @@
 let
   syncCfgs = lib.mapAttrs (_: cfg: cfg.data.sync) config.jstos.users;
   snapshotCfgs = lib.mapAttrs (_: cfg: cfg.data.snapshot) config.jstos.users;
+
+  sshAliveInterval = 10;
 in
 lib.mkMerge [
   {
@@ -81,6 +83,14 @@ lib.mkMerge [
       # Unison needs many inotify watches.
       boot.kernel.sysctl."fs.inotify.max_user_watches" = "2147483647";
 
+      # This is the other half of `unison.sshargs`.
+      services.openssh.settings =
+        lib.mkIf (builtins.any (cfg: cfg.server.enable) (builtins.attrValues syncCfgs))
+          {
+            TCPKeepAlive = "no";
+            ClientAliveInterval = sshAliveInterval;
+          };
+
       home-manager.users = lib.mapAttrs (
         user: jstos:
         let
@@ -124,7 +134,7 @@ lib.mkMerge [
                     # Unison fails to notice when the remote server stopped sending.
                     # `TCPKeepAlive` is a legacy option that rarely works
                     # but is enabled by default.
-                    sshargs = "-o TCPKeepAlive=no -o ServerAliveInterval=10";
+                    sshargs = "-o TCPKeepAlive=no -o ServerAliveInterval=${toString sshAliveInterval}";
 
                     # BTRFS snapshots should not be synced.
                     ignore = "BelowPath .snapshots";
