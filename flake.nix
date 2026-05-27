@@ -78,6 +78,12 @@
       eachSystem = nixpkgs.lib.genAttrs (import systems);
     in
     rec {
+      lib = {
+        mimeTypes = builtins.attrNames (
+          builtins.fromJSON (builtins.readFile (inputs.mime-db + "/db.json"))
+        );
+      };
+
       packages = eachSystem (system: overlays.default pkgs.${system} pkgs.${system});
 
       overlays.default =
@@ -92,10 +98,6 @@
             src = inputs.flow;
             cargoLock.lockFile = inputs.flow + "/Cargo.lock";
           };
-
-          mimeTypes = builtins.attrNames (
-            builtins.fromJSON (builtins.readFile (inputs.mime-db + "/db.json"))
-          );
 
           owm = inputs.owm.packages.${system}.default;
 
@@ -122,7 +124,10 @@
             system = pkgs.stdenv.hostPlatform.system;
           in
           {
-            _module.args.jstos-pkgs = packages.${system};
+            _module.args.jstos = {
+              lib = lib;
+              pkgs = packages.${system};
+            };
 
             imports = [
               inputs.home-manager.nixosModules.home-manager

@@ -1,11 +1,13 @@
 {
   config,
-  jstos-pkgs,
+  jstos,
   lib,
   pkgs,
   ...
 }:
 let
+  inherit (jstos.lib) mimeTypes;
+
   config' = config;
 in
 {
@@ -332,7 +334,7 @@ in
                     || (lib.strings.hasPrefix "image/" x)
                     || (lib.strings.hasPrefix "video/" x)
                   )
-                ) jstos-pkgs.mimeTypes
+                ) mimeTypes
               )
             )
             // {

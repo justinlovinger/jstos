@@ -1,11 +1,13 @@
 {
   config,
-  jstos-pkgs,
+  jstos,
   lib,
   pkgs,
   ...
 }:
 let
+  inherit (jstos.pkgs) tag tag-view;
+
   config' = config;
 in
 {
@@ -217,8 +219,8 @@ in
 
       home.packages = [
         pkgs.fd # Faster `find`
-        jstos-pkgs.tag
-        jstos-pkgs.tag-view
+        tag
+        tag-view
 
         (pkgs.writeShellScriptBin "o" ''
           # From `xdg-open`:
