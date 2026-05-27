@@ -1,4 +1,6 @@
 {
+  description = "An opinionated Linux distribution built in NixOS";
+
   inputs = {
     llm = {
       url = "path:./llm";
