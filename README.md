@@ -93,8 +93,11 @@ without setting `jstos.enable = true`.
 
 ### Extensions
 
-Additional extensions are available under `nixosModules`
-and must be imported separately,
+Additional options are available as extensions
+under the `nixosModules` output of the flake.
+Available extensions are documented in comments in `flake.nix`,
+until a better method exists.
+Extensions must be imported separately,
 such as:
 
 ```nix

@@ -111,6 +111,7 @@
       nixosModules = rec {
         default = jstos;
 
+        # JstOS and all extensions
         all = {
           imports = [
             jstos
@@ -120,6 +121,7 @@
           ];
         };
 
+        # JstOS core and general system and user configuration
         jstos =
           { pkgs, ... }:
           let
@@ -145,14 +147,17 @@
             ];
           };
 
+        # Options to manage and backup a directory of important data
         data = {
           imports = [ ./data.nix ];
         };
 
+        # Options to enable playing the game Go
         goGame = {
           imports = [ ./go-game ];
         };
 
+        # Options to enable a LLM
         llm = inputs.llm.nixosModules.default;
       };
     };
