@@ -5,12 +5,14 @@ def main [
   --max: int = 100 # Maximum brightness
   --knee: int = 100000 # Lux at max brightness. Affects how sensitive brightness is to lux.
   --interval: duration = 1sec # How often to check lux
-  --smoothing: float = 0.3 # Smoothing factor for exponential moving average of brightness. The lower the value, the slower brightness adjusts to changes in lux. Too high, and brightness may shift rapidly as light beams pass over the sensor.
+  --smoothing: duration = 5sec # Smooth brightness over approximately this length of time. The higher the value, the slower brightness adjusts to changes in lux. Too low, and brightness may change rapidly as light shifts over the sensor.
   --step: float = 5.0 # Brightness is rounded to a multiple of this. This avoids changing brightness too often.
   --transition-time: duration = 1sec # How smoothly to transition brightness
 ] {
   let range = ($max - $min)
   let range_div_step = ($range / $step)
+
+  let smoothing = (2 / (($smoothing / $interval) + 1)) # Also known as `alpha` in exponential moving average
 
   # Ideally,
   # we would use `ClaimLight` and `ReleaseLight` ourselves,
