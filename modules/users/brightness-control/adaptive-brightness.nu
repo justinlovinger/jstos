@@ -5,8 +5,8 @@ def main [
   --max: int = 100 # Maximum brightness
   --knee: int = 100000 # Lux at max brightness. Affects how sensitive brightness is to lux.
   --interval: duration = 1sec # How often to check lux
-  --smoothing: float = 0.3 # Smoothing factor for exponential moving average. Lower is slower.
-  --threshold: int = 5 # Brightness must be at least this different to change
+  --smoothing: float = 0.3 # Smoothing factor for exponential moving average of brightness. The lower the value, the slower brightness adjusts to changes in lux. Too high, and brightness may shift rapidly as light beams pass over the sensor.
+  --step: float = 5.0 # Brightness is rounded to a multiple of this. This avoids changing brightness too often.
   --transition-time: duration = 1sec # How smoothly to transition brightness
 ] {
   let range = ($max - $min)
@@ -25,8 +25,8 @@ def main [
   mut change_brightness_id: oneof<nothing,int> = null;
   loop {
     $avg_brightness = ($smoothing * (get_brightness $min $range $knee) + (1 - $smoothing) * $avg_brightness)
-    let new_brightness = $avg_brightness
-    if ($new_brightness - $cur_brightness | math abs) > $threshold {
+    let new_brightness = ([($min + (($avg_brightness - $min) / $step | math round) * $step), $max] | math min)
+    if $new_brightness != $cur_brightness {
       $cur_brightness = $new_brightness
       try { job kill $change_brightness_id }
       $change_brightness_id = job spawn { brillo -S $new_brightness -u ($transition_time | format duration µs) }
