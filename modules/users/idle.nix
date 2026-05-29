@@ -157,7 +157,7 @@ in
     let
       cfg = jstos.idle;
 
-      lockCommand = "systemctl --user start lock.service";
+      lockCommand = "${lib.getExe' pkgs.systemd "systemctl"} --user start lock.service";
       lockScript = pkgs.writeShellScript "lock.sh" ''
         # Reduce screen blank timeout
         # for lockscreen.
