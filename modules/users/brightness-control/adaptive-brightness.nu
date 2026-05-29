@@ -10,6 +10,7 @@ def main [
   --transition-time: duration = 1sec # How smoothly to transition brightness
 ] {
   let range = ($max - $min)
+  let range_div_step = ($range / $step)
 
   # Ideally,
   # we would use `ClaimLight` and `ReleaseLight` ourselves,
@@ -20,12 +21,12 @@ def main [
   # after the call returns.
   job spawn { monitor-sensor --light | ignore }
 
-  mut avg_brightness = (get_brightness $min $range $knee)
+  mut avg_brightness = (get_brightness $knee)
   mut cur_brightness = (brillo -G | into float)
   mut change_brightness_id: oneof<nothing,int> = null;
   loop {
-    $avg_brightness = ($smoothing * (get_brightness $min $range $knee) + (1 - $smoothing) * $avg_brightness)
-    let new_brightness = ([($min + (($avg_brightness - $min) / $step | math round) * $step), $max] | math min)
+    $avg_brightness = ($smoothing * (get_brightness $knee) + (1 - $smoothing) * $avg_brightness)
+    let new_brightness = ($min + $step * ($range_div_step * $avg_brightness | math round))
     if $new_brightness != $cur_brightness {
       $cur_brightness = $new_brightness
       try { job kill $change_brightness_id }
@@ -35,11 +36,7 @@ def main [
   }
 }
 
-def get_brightness [
-  min: int
-  range: int
-  knee: int
-] {
+def get_brightness [ knee: int ] {
   let lux = busctl get-property --system net.hadess.SensorProxy /net/hadess/SensorProxy net.hadess.SensorProxy LightLevel | split row ' ' | get 1 | into float
-  ($min + $range * ([($lux + 1 | math log $knee), 1] | math min))
+  [($lux + 1 | math log $knee), 1] | math min
 }
