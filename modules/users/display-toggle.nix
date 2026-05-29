@@ -47,11 +47,23 @@ in
                   else
                     ""
                 }
+                ${
+                  if config.brightnessControl.adaptiveBrightness.enable then
+                    "${lib.getExe' pkgs.systemd "systemctl"} --user stop adaptive-brightness.service"
+                  else
+                    ""
+                }
               } else {
                 ${lib.getExe pkgs.way-displays} -d DISABLED ${cfg.name}
                 ${
                   if cfg.disableTouch.enable then
                     "${lib.getExe' pkgs.river-classic "riverctl"} input ${cfg.disableTouch.input} events enabled"
+                  else
+                    ""
+                }
+                ${
+                  if config.brightnessControl.adaptiveBrightness.enable then
+                    "${lib.getExe' pkgs.systemd "systemctl"} --user start adaptive-brightness.service"
                   else
                     ""
                 }
