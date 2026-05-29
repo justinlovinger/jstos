@@ -22,7 +22,8 @@ def main [
     let new_brightness = ($min + $range * ([($lux + 1 | math log $knee), 1] | math min))
     if ($new_brightness - $brightness | math abs) > $threshold {
       $brightness = $new_brightness
-      brillo -S $new_brightness -u ($transition_time | format duration µs)
+      job list | get id | each { try { job kill $in } }
+      job spawn { brillo -S $new_brightness -u ($transition_time | format duration µs) }
     }
     sleep $interval
   }
