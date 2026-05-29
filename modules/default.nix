@@ -78,6 +78,14 @@ let
               Whether device has a keyboard always available.
             '';
           };
+          lightSensor = lib.mkOption {
+            type = lib.types.bool;
+            default = is.mobile;
+            defaultText = lib.literalExpression "is.mobile";
+            description = ''
+              Whether device has a light sensor.
+            '';
+          };
           microphone = lib.mkOption {
             type = lib.types.bool;
             default = is.laptop || is.mobile;

@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -27,6 +28,15 @@ lib.mkMerge [
                 Whether to enable brightness controls.
               '';
             };
+
+            adaptiveBrightness.enable = lib.mkOption {
+              type = lib.types.bool;
+              default = config'.jstos.device.has.lightSensor;
+              defaultText = lib.literalExpression "config.jstos.device.has.lightSensor";
+              description = ''
+                Whether to enable adaptive brightness.
+              '';
+            };
           };
 
           config.windowManager.bindings = lib.mkIf cfg.enable {
@@ -51,5 +61,37 @@ lib.mkMerge [
     # defaulting to 1%,
     # so we don't need to change brightness on boot.
     boot.systemd.clampBacklight = lib.mkDefault false;
+
+    home-manager.users = lib.mapAttrs (
+      user: jstos:
+      let
+        cfg = jstos.brightnessControl;
+      in
+      { config, ... }:
+      lib.mkIf cfg.adaptiveBrightness.enable {
+        systemd.user.services.adaptive-brightness = {
+          Unit = {
+            Description = "Adaptive brightness";
+            PartOf = config.wayland.systemd.target;
+            Requires = config.wayland.systemd.target;
+            After = config.wayland.systemd.target;
+          };
+          Install = {
+            WantedBy = [ config.wayland.systemd.target ];
+          };
+          Service = {
+            Type = "exec";
+            Environment = "PATH=${
+              lib.makeBinPath [
+                pkgs.brillo
+                pkgs.nushell
+              ]
+            }";
+            ExecStart = toString ./adaptive-brightness.nu;
+            Restart = "always";
+          };
+        };
+      }
+    ) config.jstos.users;
   })
 ]

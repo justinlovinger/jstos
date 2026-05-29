@@ -1,7 +1,7 @@
 { ... }:
 {
   imports = [
-    ./brightness-control.nix
+    ./brightness-control
     ./colors.nix
     ./dictation.nix
     ./display-toggle.nix
