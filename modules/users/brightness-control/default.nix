@@ -29,13 +29,28 @@ lib.mkMerge [
               '';
             };
 
-            adaptiveBrightness.enable = lib.mkOption {
-              type = lib.types.bool;
-              default = config'.jstos.device.has.lightSensor;
-              defaultText = lib.literalExpression "config.jstos.device.has.lightSensor";
-              description = ''
-                Whether to enable adaptive brightness.
-              '';
+            adaptiveBrightness = {
+              enable = lib.mkOption {
+                type = lib.types.bool;
+                default = config'.jstos.device.has.lightSensor;
+                defaultText = lib.literalExpression "config.jstos.device.has.lightSensor";
+                description = ''
+                  Whether to enable adaptive brightness.
+                '';
+              };
+              settings = lib.mkOption {
+                type = lib.types.attrsOf lib.types.anything;
+                default = { };
+                example = {
+                  min = 0;
+                  max = 100;
+                  knee = 100000;
+                };
+                description = ''
+                  Arguments passed to `adaptive-brightness.nu`.
+                  See `adaptive-brightness.nu` for options.
+                '';
+              };
             };
           };
 
@@ -87,7 +102,9 @@ lib.mkMerge [
                 pkgs.nushell
               ]
             }";
-            ExecStart = toString ./adaptive-brightness.nu;
+            ExecStart = "${./adaptive-brightness.nu} ${
+              lib.cli.toCommandLineShellGNU { } cfg.adaptiveBrightness.settings
+            }";
             Restart = "always";
           };
         };
