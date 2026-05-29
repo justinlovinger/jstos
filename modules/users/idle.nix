@@ -195,6 +195,12 @@ in
           let displays = (${lib.getExe pkgs.way-displays} -y -g | from yaml | get STATE | get HEADS | where CURRENT.ENABLED | get NAME)
           $displays | save -f ${state}
           $displays | each {|o| try { ${lib.getExe pkgs.way-displays} -s DISABLED $o } } | ignore
+          ${
+            if jstos.brightnessControl.adaptiveBrightness.enable then
+              "${lib.getExe' pkgs.systemd "systemctl"} --user stop adaptive-brightness.service"
+            else
+              ""
+          }
         '';
       enableAll =
         state:
@@ -202,6 +208,12 @@ in
           #!${lib.getExe pkgs.nushell}
           open ${state} | lines | each {|o| try { ${lib.getExe pkgs.way-displays} -d DISABLED $o } } | ignore
           rm ${state}
+          ${
+            if jstos.brightnessControl.adaptiveBrightness.enable then
+              "${lib.getExe' pkgs.systemd "systemctl"} --user start adaptive-brightness.service"
+            else
+              ""
+          }
         '';
 
       displaysState = ''$"($env.XDG_RUNTIME_DIR)/idle-displays"'';
