@@ -77,6 +77,7 @@ lib.mkMerge [
     # so we don't need to change brightness on boot.
     boot.systemd.clampBacklight = lib.mkDefault false;
 
+    hardware.sensor.iio.enable = lib.mkIf (builtins.any (cfg: cfg.adaptiveBrightness.enable) cfgs) true;
     home-manager.users = lib.mapAttrs (
       user: jstos:
       let
@@ -99,7 +100,9 @@ lib.mkMerge [
             Environment = "PATH=${
               lib.makeBinPath [
                 pkgs.brillo
+                pkgs.iio-sensor-proxy
                 pkgs.nushell
+                pkgs.systemd
               ]
             }";
             ExecStart = "${./adaptive-brightness.nu} ${
