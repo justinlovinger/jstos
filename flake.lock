@@ -98,7 +98,9 @@
     },
     "llm": {
       "inputs": {
-        "mcp-servers-nix": "mcp-servers-nix",
+        "mcp-servers-nix": [
+          "mcp-servers-nix"
+        ],
         "nixpkgs": [
           "nixpkgs"
         ],
@@ -119,7 +121,6 @@
     "mcp-servers-nix": {
       "inputs": {
         "nixpkgs": [
-          "llm",
           "nixpkgs"
         ]
       },
@@ -222,6 +223,7 @@
         "flow": "flow",
         "home-manager": "home-manager",
         "llm": "llm",
+        "mcp-servers-nix": "mcp-servers-nix",
         "mime-db": "mime-db",
         "naersk": "naersk",
         "nixpkgs": "nixpkgs",
