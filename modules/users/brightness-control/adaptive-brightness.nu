@@ -26,8 +26,8 @@ def main [
   # after the call returns.
   job spawn { monitor-sensor --light | ignore }
 
-  mut moving_internal_brightness = (get_brightness $knee)
   mut internal_brightness = (((brillo -G | into float) - $min) / $range)
+  mut moving_internal_brightness = $internal_brightness
   mut change_brightness_id: oneof<nothing,int> = null;
   loop {
     $moving_internal_brightness = ($smoothing * (get_brightness $knee) + (1 - $smoothing) * $moving_internal_brightness)
