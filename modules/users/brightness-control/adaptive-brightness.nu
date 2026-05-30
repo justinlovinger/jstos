@@ -4,11 +4,11 @@ def main [
   --min: int = 0 # Minimum brightness
   --max: int = 100 # Maximum brightness
   --knee: int = 100000 # Lux at max brightness. Affects how sensitive brightness is to lux.
-  --interval: duration = 1sec # How often to check lux
-  --smoothing: duration = 5sec # Smooth brightness over approximately this length of time. The higher the value, the slower brightness adjusts to changes in lux. Too low, and brightness may change rapidly as light shifts over the sensor.
-  --step: float = 5.0 # Brightness is rounded to a multiple of this. This avoids changing brightness too often.
+  --step: float = 10.0 # Brightness is rounded to a multiple of this. This avoids changing brightness too often.
   --threshold: float = 0.4 # Threshold as percent of step. Brightness must be this much more of less than a step to change. This prevents brightness changing too often at step boundries.
-  --transition-time: duration = 1sec # How smoothly to transition brightness
+  --interval: duration = 5sec # How often to check lux
+  --smoothing: duration = 60sec # Smooth brightness over approximately this length of time. The higher the value, the slower brightness adjusts to changes in lux. Too low, and brightness may change rapidly as light shifts over the sensor.
+  --transition-time: duration = 100ms # How smoothly to transition brightness
 ] {
   let range = ($max - $min)
 
