@@ -26,62 +26,59 @@ in
     };
   };
 
-  config = lib.mkMerge [
-    (
-      let
-        # When the kernel supports backing-store-less zswap,
-        # we won't need zram at all.
-        useZram = config.swapDevices == [ ];
-      in
-      lib.mkIf cfg.enable (
-        lib.mkMerge [
-          (lib.mkIf useZram {
-            zramSwap = {
-              enable = true;
-              # Zram takes size of the swap as a percent of memory,
-              # not the percent of memory that can be used for swap.
-              # When using zstd,
-              # in practice,
-              # zram compresses at about a 3:1 ratio,
-              # so we multiply the percent of memory to compress by 3.
-              memoryPercent = cfg.percent * 3;
-            };
-          })
-          (lib.mkIf (!useZram) {
-            # See <https://github.com/NixOS/nixpkgs/pull/470366>.
-            # We can use the `zswap` option directly
-            # when that pull request is merged.
+  config =
+    let
+      # When the kernel supports backing-store-less zswap,
+      # we won't need zram at all.
+      useZram = config.swapDevices == [ ];
+    in
+    lib.mkIf cfg.enable (
+      lib.mkMerge [
+        (lib.mkIf useZram {
+          zramSwap = {
+            enable = true;
+            # Zram takes size of the swap as a percent of memory,
+            # not the percent of memory that can be used for swap.
+            # When using zstd,
+            # in practice,
+            # zram compresses at about a 3:1 ratio,
+            # so we multiply the percent of memory to compress by 3.
+            memoryPercent = cfg.percent * 3;
+          };
+        })
+        (lib.mkIf (!useZram) {
+          # See <https://github.com/NixOS/nixpkgs/pull/470366>.
+          # We can use the `zswap` option directly
+          # when that pull request is merged.
 
-            # 1. Core configuration: kernel parameters for early boot
-            boot.kernelParams = [
-              "zswap.enabled=1"
-              "zswap.compressor=zstd"
-              "zswap.zpool=zsmalloc"
-              "zswap.max_pool_percent=${toString cfg.percent}"
-              "zswap.accept_threshold_percent=90"
-              "zswap.shrinker_enabled=1"
-            ];
+          # 1. Core configuration: kernel parameters for early boot
+          boot.kernelParams = [
+            "zswap.enabled=1"
+            "zswap.compressor=zstd"
+            "zswap.zpool=zsmalloc"
+            "zswap.max_pool_percent=${toString cfg.percent}"
+            "zswap.accept_threshold_percent=90"
+            "zswap.shrinker_enabled=1"
+          ];
 
-            # 2. Dependency management: ensure required modules are included in initrd or kernel
-            # This ensures Zswap is ready early in the boot process (before swap is mounted)
-            boot.initrd.kernelModules = [
-              "zstd"
-              "zsmalloc"
-            ];
+          # 2. Dependency management: ensure required modules are included in initrd or kernel
+          # This ensures Zswap is ready early in the boot process (before swap is mounted)
+          boot.initrd.kernelModules = [
+            "zstd"
+            "zsmalloc"
+          ];
 
-            # 3. Runtime configuration using boot.kernel.sysfs
-            # This ensures zswap parameters are properly set and maintained during system rebuilds
-            boot.kernel.sysfs.module.zswap.parameters = {
-              enabled = true;
-              compressor = "zstd";
-              zpool = "zsmalloc";
-              max_pool_percent = cfg.percent;
-              accept_threshold_percent = 90;
-              shrinker_enabled = true;
-            };
-          })
-        ]
-      )
-    )
-  ];
+          # 3. Runtime configuration using boot.kernel.sysfs
+          # This ensures zswap parameters are properly set and maintained during system rebuilds
+          boot.kernel.sysfs.module.zswap.parameters = {
+            enabled = true;
+            compressor = "zstd";
+            zpool = "zsmalloc";
+            max_pool_percent = cfg.percent;
+            accept_threshold_percent = 90;
+            shrinker_enabled = true;
+          };
+        })
+      ]
+    );
 }
