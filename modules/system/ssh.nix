@@ -3,6 +3,9 @@
   lib,
   ...
 }:
+let
+  cfg = config.jstos.system.ssh.hardening;
+in
 {
   options.jstos.system.ssh.hardening = {
     enable = lib.mkOption {
@@ -15,7 +18,7 @@
     };
   };
 
-  config = {
+  config = lib.mkIf cfg.enable {
     # Rate limiting SSH requests blocks brute force hacks.
     # See <https://debian-administration.org/article/187/Using_iptables_to_rate-limit_incoming_connections>.
     # `--hitcount n+1` allows n connections before rejecting.
