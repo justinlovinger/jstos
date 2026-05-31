@@ -7,7 +7,7 @@ def main [
   --step: float = 10.0 # Brightness is rounded to a multiple of this. This avoids changing brightness too often.
   --threshold: float = 0.4 # Threshold as percent of step. Brightness must be this much more of less than a step to change. This prevents brightness changing too often at step boundries.
   --interval: duration = 5sec # How often to check lux
-  --smoothing: duration = 60sec # Smooth brightness over approximately this length of time. The higher the value, the slower brightness adjusts to changes in lux. Too low, and brightness may change rapidly as light shifts over the sensor.
+  --smoothing: duration = 20sec # Smooth brightness over approximately this length of time. The higher the value, the slower brightness adjusts to changes in lux. Too low, and brightness may change rapidly as light shifts over the sensor.
   --transition-time: duration = 100ms # How smoothly to transition brightness
 ] {
   let range = ($max - $min)
