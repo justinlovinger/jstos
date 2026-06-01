@@ -108,7 +108,7 @@ nixosConfigurations.HOSTNAME = inputs.nixpkgs.lib.nixosSystem {
   modules = [
     # ...
     inputs.jstos.nixosModules.jstos
-    inputs.jstos.nixosModules.data
+    inputs.jstos.nixosModules.backup
     inputs.jstos.nixosModules.go-game
     inputs.jstos.nixosModules.llm
   ];

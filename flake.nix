@@ -121,7 +121,7 @@
         all = {
           imports = [
             jstos
-            data
+            backup
             goGame
             llm
           ];
@@ -153,9 +153,9 @@
             ];
           };
 
-        # Options to manage and backup a directory of important data
-        data = {
-          imports = [ ./data.nix ];
+        # Options to backup directories
+        backup = {
+          imports = [ ./backup.nix ];
         };
 
         # Options to enable playing the game Go
