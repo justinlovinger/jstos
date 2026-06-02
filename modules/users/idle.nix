@@ -287,9 +287,23 @@ in
           services.swayidle.timeouts = [
             {
               timeout = cfg.suspend.timeout;
-              command = "${lib.getExe' pkgs.systemd "systemctl"} suspend";
+              command = "${lib.getExe' pkgs.systemd "systemctl"} --user start suspend";
+              resumeCommand = "${lib.getExe' pkgs.systemd "systemctl"} --user stop suspend";
             }
           ];
+
+          systemd.user.services.suspend = {
+            Unit.Description = "suspend";
+            Service = {
+              ExecStart = pkgs.writeScript "suspend" ''
+                #!${lib.getExe pkgs.nushell}
+                loop {
+                  try { ${lib.getExe' pkgs.systemd "systemctl"} suspend }
+                  sleep 1min
+                }
+              '';
+            };
+          };
         })
       ]
     )
