@@ -154,7 +154,7 @@ in
             main.font = "monospace:size=14";
             scrollback.lines = 0;
             cursor.beam-thickness = 1;
-            colors =
+            colors-dark =
               with colors.hexWithoutHash;
               {
                 foreground = fg.normal;
@@ -256,6 +256,7 @@ in
             default_layout "bare"
             session_serialization false
             disable_session_metadata true
+            show_release_notes false
             show_startup_tips false
 
             default_shell "${pkgs.writeShellScript "login" ''

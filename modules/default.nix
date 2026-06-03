@@ -258,6 +258,7 @@ in
           stateVersion = "21.05";
           username = user;
         };
+        xdg.userDirs.setSessionVariables = true;
       }
     ) config.jstos.users;
   };

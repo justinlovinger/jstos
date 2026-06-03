@@ -2,7 +2,7 @@
   inputs = {
     systems.url = "github:nix-systems/default";
 
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
     mcp-servers-nix = {
       url = "github:natsukium/mcp-servers-nix";

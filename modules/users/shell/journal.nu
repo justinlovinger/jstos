@@ -16,7 +16,7 @@ def lje [
   ...pattern: string
 ] {
   let pattern = ($pattern | str join " ")
-  let paths = (ls *.md | reverse | get name | where {|x| (open $x) =~ $pattern} | skip $skip | take $take | sort)
+  let paths = (ls *.md | reverse | get name | where {|x| (open --raw $x) =~ $pattern} | skip $skip | take $take | sort)
   if $copy {
     wl-copy -n ...$paths
   } else if $path {
@@ -27,5 +27,5 @@ def lje [
 }
 
 def showje [] {
-  each {|path| $"# ($path)\n\n(open $path)"} | str join "\n"
+  each {|path| $"# ($path)\n\n(open --raw $path)"} | str join "\n"
 }

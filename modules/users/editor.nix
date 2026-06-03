@@ -48,7 +48,7 @@ in
         home.packages = with pkgs; [
           # We need Nix support without a development shell
           # so we can write development shells.
-          nixfmt-rfc-style
+          nixfmt
           nil
 
           # Language servers for simple stable languages
@@ -56,9 +56,9 @@ in
           # without a development shell.
           typos-lsp # Spellchecking
           marksman # Markdown
-          nodePackages.vscode-langservers-extracted # Includes markup language servers, like JSON.
           taplo # Toml
           texlab # LaTeX
+          vscode-langservers-extracted # Includes markup language servers, like JSON.
           yaml-language-server
         ];
 

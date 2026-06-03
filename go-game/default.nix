@@ -14,7 +14,7 @@ let
       url = "https://github.com/SabakiHQ/Sabaki/releases/download/v0.52.2/sabaki-v0.52.2-linux-x64.AppImage";
       hash = "sha256-wuCj5HvNZc2KOdc5O49upNToFDKiMMWexykctHi51EY=";
     };
-    extraPkgs = pkgs: [ pkgs.xorg.libxshmfence ];
+    extraPkgs = pkgs: [ pkgs.libxshmfence ];
   };
 
   katagoSettingsFormat = {
