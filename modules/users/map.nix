@@ -116,8 +116,6 @@ in
     )
   ];
 
-  services.geoclue2.enable = lib.mkIf (builtins.any (cfg: cfg.enable) cfgs) true;
-
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let

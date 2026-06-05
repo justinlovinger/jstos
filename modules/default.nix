@@ -46,6 +46,14 @@ let
               Whether device has a built-in display.
             '';
           };
+          compass = lib.mkOption {
+            type = lib.types.bool;
+            default = is.mobile;
+            defaultText = lib.literalExpression "is.mobile";
+            description = ''
+              Whether device has a compass.
+            '';
+          };
           display = lib.mkOption {
             type = lib.types.bool;
             default = is.desktop || is.laptop || is.mobile || has.builtInDisplay;
