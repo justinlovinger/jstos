@@ -78,6 +78,14 @@ let
               Whether device has GPS.
             '';
           };
+          inPersonUsage = lib.mkOption {
+            type = lib.types.bool;
+            default = has.display;
+            defaultText = lib.literalExpression "has.display";
+            description = ''
+              Whether device has regular in-person usage.
+            '';
+          };
           keyboard = lib.mkOption {
             type = lib.types.bool;
             default = is.desktop || is.laptop;
@@ -112,11 +120,11 @@ let
           };
           regularUsage = lib.mkOption {
             type = lib.types.bool;
-            default = is.desktop || is.laptop || is.mobile;
-            defaultText = lib.literalExpression "is.desktop || is.laptop || is.mobile";
+            default = is.desktop || is.laptop || is.mobile || has.inPersonUsage;
+            defaultText = lib.literalExpression "is.desktop || is.laptop || is.mobile || has.inPersonUsage";
             description = ''
               Whether device has regular usage by a person,
-              either physically or remotely.
+              either in-person or remotely.
             '';
           };
           wifi = lib.mkOption {

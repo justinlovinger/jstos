@@ -10,13 +10,11 @@ in
   options.jstos.system.location = {
     enable = lib.mkOption {
       type = lib.types.bool;
-      # Note,
-      # we assume if a device doesn't have a display
-      # it isn't used in person
-      # and therefore doesn't need location services.
       default =
-        config.jstos.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.display;
-      defaultText = lib.literalExpression "config.jstos.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.display";
+        config.jstos.enable
+        && config.jstos.device.has.regularUsage
+        && config.jstos.device.has.inPersonUsage;
+      defaultText = lib.literalExpression "config.jstos.enable && config.jstos.device.has.regularUsage && config.jstos.device.has.inPersonUsage";
       description = ''
         Whether to enable location services.
       '';
