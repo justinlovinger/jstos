@@ -17,6 +17,9 @@
     systems.url = "github:nix-systems/default";
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    # The upstream CrowdSec module is broken.
+    # We can remove this once the pull request is merged.
+    nixpkgs-crowdsec.url = "github:TornaxO7/nixpkgs/crowdsec";
 
     home-manager = {
       url = "github:nix-community/home-manager/release-26.05";
@@ -145,6 +148,24 @@
               inputs.whisp-away.nixosModules.nixos
 
               ./modules
+
+              {
+                disabledModules = [
+                  "services/security/crowdsec.nix"
+                  "services/security/crowdsec-firewall-bouncer.nix"
+                ];
+
+                imports = [
+                  "${inputs.nixpkgs-crowdsec}/nixos/modules/services/security/crowdsec.nix"
+                  "${inputs.nixpkgs-crowdsec}/nixos/modules/services/security/crowdsec-firewall-bouncer.nix"
+                ];
+
+                nixpkgs.overlays = [
+                  (pkgs: prev: {
+                    crowdsec = inputs.nixpkgs-crowdsec.legacyPackages.${pkgs.stdenv.hostPlatform.system}.crowdsec;
+                  })
+                ];
+              }
             ];
 
             home-manager.sharedModules = [

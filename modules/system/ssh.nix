@@ -21,28 +21,33 @@ in
       default = config.jstos.enable && config.jstos.device.has.regularUsage;
       defaultText = lib.literalExpression "config.jstos.enable && config.jstos.device.has.regularUsage";
       description = ''
-        Whether to optimize for connecting to hardened SSH.
+        Whether to improve SSH performance.
       '';
     };
   };
 
   config = lib.mkMerge [
     (lib.mkIf cfg.server.hardening.enable {
-      # Rate limiting SSH requests blocks brute force hacks.
-      # See <https://debian-administration.org/article/187/Using_iptables_to_rate-limit_incoming_connections>.
-      # `--hitcount n+1` allows n connections before rejecting.
-      # Subsequent connections
-      # within `--seconds` time
-      # are rejected
-      # and reset the timer.
-      networking.firewall.extraCommands = ''
-        ${lib.concatStringsSep "\n" (
-          map (port: ''
-            iptables -I nixos-fw -p tcp --dport ${toString port} -m state --state NEW -m recent --name ssh-rate-limit --set
-            iptables -I nixos-fw -p tcp --dport ${toString port} -m state --state NEW -m recent --name ssh-rate-limit --update --seconds 60 --hitcount 4 -j nixos-fw-log-refuse
-          '') config.services.openssh.ports
-        )}
-      '';
+      # The `linux` collection includes rules for SSH.
+      services.crowdsec = {
+        enable = true;
+        hub.collections = [ "crowdsecurity/linux" ];
+      };
+      # CrowdSec is too verbose by default,
+      # but there is currently no easy way to change the log level,
+      # see <https://github.com/NixOS/nixpkgs/pull/446307#pullrequestreview-4451542997>.
+      systemd.services.crowdsec.serviceConfig.ExecStart =
+        lib.mkForce "${lib.getExe' config.services.crowdsec.package "crowdsec"} -warning";
+      services.crowdsec-firewall-bouncer = {
+        enable = true;
+        # The firewall bouncer is not as verbose as CrowdSec,
+        # but it is still verbose enough
+        # that identifying issues among the noise
+        # can be difficult.
+        settings.log_level = "warn";
+      };
+      # The service may timeout on slower machines.
+      systemd.services.crowdsec.serviceConfig.TimeoutStartSec = "infinity";
 
       # Certificate authentication is common
       # and more secure.
@@ -52,8 +57,7 @@ in
       };
     })
     (lib.mkIf cfg.client.optimization.enable {
-      # With rate limiting,
-      # reusing connections is necessary for some use cases.
+      # Reusing connections is more efficient.
       programs.ssh.extraConfig = ''
         Host *
         ControlMaster auto
