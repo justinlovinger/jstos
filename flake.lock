@@ -192,22 +192,6 @@
         "type": "github"
       }
     },
-    "nixpkgs-crowdsec": {
-      "locked": {
-        "lastModified": 1780424212,
-        "narHash": "sha256-3mUjG/7A0x/P3q2Mzsqq+aBO4kWL86oxLOeleysvAEA=",
-        "owner": "TornaxO7",
-        "repo": "nixpkgs",
-        "rev": "5500e2a84a59e9bafd7ff9030f607a84b8784d32",
-        "type": "github"
-      },
-      "original": {
-        "owner": "TornaxO7",
-        "ref": "crowdsec",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
     "owm": {
       "inputs": {
         "naersk": [
@@ -243,7 +227,6 @@
         "mime-db": "mime-db",
         "naersk": "naersk",
         "nixpkgs": "nixpkgs",
-        "nixpkgs-crowdsec": "nixpkgs-crowdsec",
         "owm": "owm",
         "systems": "systems",
         "tag": "tag",
