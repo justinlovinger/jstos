@@ -129,7 +129,7 @@ lib.mkMerge [
         user: cfg:
         lib.nameValuePair (user + "-home") {
           SUBVOLUME = cfg.root;
-          ALLOW_USERS = [ user ];
+          ALLOW_USERS = [ ];
           TIMELINE_CREATE = true;
           TIMELINE_CLEANUP = true;
           TIMELINE_MIN_AGE = 60 * 60 * 8; # Seconds. This limits frequent snapshots.
@@ -152,7 +152,7 @@ lib.mkMerge [
         user: cfg:
         lib.nameValuePair (user + "-data") {
           SUBVOLUME = cfg.root;
-          ALLOW_USERS = [ user ];
+          ALLOW_USERS = [ ];
           TIMELINE_CREATE = true;
           TIMELINE_CLEANUP = true;
           TIMELINE_MIN_AGE = 60 * 60 * 8; # Seconds. This limits frequent snapshots.
