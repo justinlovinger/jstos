@@ -239,22 +239,21 @@ in
 
             mapping_tools =
               let
-                tools =
-                  lib.mapAttrs (
-                    server:
-                    { tools, ... }:
-                    lib.concatStringsSep "," (map (tool: toolName server tool) (builtins.attrNames tools))
-                  ) cfg.mcpServers
-                  // {
-                    search = lib.concatStringsSep "," [
-                      "mcp__time__get_current_time"
-                      "mcp__fetch__fetch"
-                      "mcp__duckduckgo__search"
-                    ];
-                  };
+                tools = lib.mapAttrs (
+                  server:
+                  { tools, ... }:
+                  lib.concatStringsSep "," (map (tool: toolName server tool) (builtins.attrNames tools))
+                ) cfg.mcpServers;
               in
               tools
-              // {
+              // rec {
+                search = lib.concatStringsSep "," (
+                  with tools;
+                  [
+                    time
+                    open-websearch
+                  ]
+                );
                 dev = lib.concatStringsSep "," (
                   with tools;
                   [
@@ -262,7 +261,6 @@ in
                     shell
                     filesystem
                     git
-                    # nix # See notes about `mcp-nix`.
                   ]
                 );
               };

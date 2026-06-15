@@ -27,10 +27,7 @@
       overlays.default = final: prev: {
         mcp-shell-server = (import ./pkgs/mcp-shell-server.nix) final;
 
-        # `mcp-server-fetch` in `mcp-servers-nix` is broken.
-        mcp-server-fetch = (import ./pkgs/mcp-server-fetch.nix) final;
-
-        duckduckgo-mcp-server = (import ./pkgs/duckduckgo-mcp-server.nix) final;
+        open-websearch = (import ./pkgs/open-websearch.nix) final;
       };
 
       nixosModules.default =
@@ -127,21 +124,33 @@
                       };
                     };
 
-                    fetch = {
+                    open-websearch = {
                       settings = {
-                        command = lib.getExe llmPkgs.mcp-server-fetch;
-                      };
-                      tools = {
-                        fetch.safe = lib.mkDefault true;
-                      };
-                    };
-
-                    duckduckgo = {
-                      settings = {
-                        command = lib.getExe llmPkgs.duckduckgo-mcp-server;
+                        command = lib.getExe llmPkgs.open-websearch;
+                        env = {
+                          MODE = "stdio";
+                          SEARCH_MODE = "request"; # We don't install Playwright for the `playwright` mode.
+                          DEFAULT_SEARCH_ENGINE = "startpage";
+                          ALLOWED_SEARCH_ENGINES = lib.concatStringsSep "," [
+                            # "bing" # Fails due to bot detection in `request` mode.
+                            "baidu"
+                            "csdn"
+                            "duckduckgo"
+                            # "exa" # Does not appear to be working.
+                            "brave" # Sometimes returns 429 Too Many Requests
+                            # "juejin" # This breaks the MCP server.
+                            "startpage"
+                            "sogou"
+                          ];
+                        };
                       };
                       tools = {
                         search.safe = lib.mkDefault true;
+                        fetchLinuxDoArticle.safe = lib.mkDefault true;
+                        fetchCsdnArticle.safe = lib.mkDefault true;
+                        fetchGithubReadme.safe = lib.mkDefault true;
+                        # fetchJuejinArticle.safe = lib.mkDefault true; # No point when Juejin is disabled, see above.
+                        fetchWebContent.safe = lib.mkDefault true;
                       };
                     };
                   };
