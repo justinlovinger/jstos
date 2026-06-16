@@ -60,11 +60,19 @@ in
         };
       };
 
-      programs.nushell.extraConfig = lib.mkIf jstos.shell.enable ''
-        def ? [...query: string] {
-          cha $"https://lite.duckduckgo.com/lite?kp=-1&kd=-1&q=($query | str join ' ' | url encode --all)"
-        }
-      '';
+      programs.nushell.extraConfig =
+        let
+          searchUrl =
+            if config'.jstos.system.webSearch.enable then
+              "${config'.services.searx.settings.server.base_url}/search?q="
+            else
+              "https://lite.duckduckgo.com/lite?kp=-1&kd=-1&q=";
+        in
+        lib.mkIf jstos.shell.enable ''
+          def ? [...query: string] {
+            cha $"${searchUrl}($query | str join ' ' | url encode --all)"
+          }
+        '';
     }
   ) config.jstos.users;
 

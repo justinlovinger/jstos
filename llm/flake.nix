@@ -25,8 +25,8 @@
       packages = eachSystem (system: overlays.default pkgs.${system} pkgs.${system});
 
       overlays.default = final: prev: {
+        mcp-searxng = (import ./pkgs/mcp-searxng.nix) final;
         mcp-shell-server = (import ./pkgs/mcp-shell-server.nix) final;
-
         open-websearch = (import ./pkgs/open-websearch.nix) final;
       };
 
@@ -124,36 +124,60 @@
                       };
                     };
 
-                    open-websearch = {
-                      settings = {
-                        command = lib.getExe llmPkgs.open-websearch;
-                        env = {
-                          MODE = "stdio";
-                          SEARCH_MODE = "request"; # We don't install Playwright for the `playwright` mode.
-                          DEFAULT_SEARCH_ENGINE = "startpage";
-                          ALLOWED_SEARCH_ENGINES = lib.concatStringsSep "," [
-                            # "bing" # Fails due to bot detection in `request` mode.
-                            "baidu"
-                            "csdn"
-                            "duckduckgo"
-                            # "exa" # Does not appear to be working.
-                            "brave" # Sometimes returns 429 Too Many Requests
-                            # "juejin" # This breaks the MCP server.
-                            "startpage"
-                            "sogou"
-                          ];
+                  }
+                  // (
+                    if config.jstos.system.webSearch.enable then
+                      {
+                        mcp-searxng = {
+                          settings = {
+                            command = lib.getExe llmPkgs.mcp-searxng;
+                            env = {
+                              SEARXNG_URL = config.services.searx.settings.server.base_url;
+                              SEARXNG_LITE_TOOLS = lib.mkDefault true; # LLMs tend to do better with smaller context and simpler tools.
+                              SEARXNG_MAX_RESULTS = lib.mkDefault 10; # This is what the LLM would usually ask for if it could.
+                            };
+                          };
+                          tools = {
+                            searxng_web_search.safe = lib.mkDefault true;
+                            searxng_search_suggestions.safe = lib.mkDefault true;
+                            searxng_instance_info.safe = lib.mkDefault true;
+                            web_url_read.safe = lib.mkDefault true;
+                          };
                         };
-                      };
-                      tools = {
-                        search.safe = lib.mkDefault true;
-                        fetchLinuxDoArticle.safe = lib.mkDefault true;
-                        fetchCsdnArticle.safe = lib.mkDefault true;
-                        fetchGithubReadme.safe = lib.mkDefault true;
-                        # fetchJuejinArticle.safe = lib.mkDefault true; # No point when Juejin is disabled, see above.
-                        fetchWebContent.safe = lib.mkDefault true;
-                      };
-                    };
-                  };
+                      }
+                    else
+                      {
+                        open-websearch = {
+                          settings = {
+                            command = lib.getExe llmPkgs.open-websearch;
+                            env = {
+                              MODE = "stdio";
+                              SEARCH_MODE = "request"; # We don't install Playwright for the `playwright` mode.
+                              DEFAULT_SEARCH_ENGINE = "startpage";
+                              ALLOWED_SEARCH_ENGINES = lib.concatStringsSep "," [
+                                # "bing" # Fails due to bot detection in `request` mode.
+                                "baidu"
+                                "csdn"
+                                "duckduckgo"
+                                # "exa" # Does not appear to be working.
+                                "brave" # Sometimes returns 429 Too Many Requests
+                                # "juejin" # This breaks the MCP server.
+                                "startpage"
+                                "sogou"
+                              ];
+                            };
+                          };
+                          tools = {
+                            search.safe = lib.mkDefault true;
+                            fetchLinuxDoArticle.safe = lib.mkDefault true;
+                            fetchCsdnArticle.safe = lib.mkDefault true;
+                            fetchGithubReadme.safe = lib.mkDefault true;
+                            # fetchJuejinArticle.safe = lib.mkDefault true; # No point when Juejin is disabled, see above.
+                            fetchWebContent.safe = lib.mkDefault true;
+                          };
+                        };
+                      }
+                  );
                 }
               )
             );

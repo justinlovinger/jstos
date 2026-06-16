@@ -171,6 +171,11 @@ in
 
   services.ollama.enable = lib.any (cfg: cfg.enable && cfg.local.enable) cfgs;
 
+  services.searx.settings.search.formats = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) [
+    "html"
+    "json"
+  ];
+
   home-manager.users = lib.mapAttrs (
     user: jstos:
     let
@@ -249,10 +254,21 @@ in
               // rec {
                 search = lib.concatStringsSep "," (
                   with tools;
-                  [
-                    time
-                    open-websearch
-                  ]
+                  (
+                    [
+                      time
+                    ]
+                    ++ (
+                      if config.jstos.system.webSearch.enable then
+                        [
+                          # The other tools are rarely if ever useful.
+                          "mcp__mcp-searxng__searxng_web_search"
+                          "mcp__mcp-searxng__web_url_read"
+                        ]
+                      else
+                        [ open-websearch ]
+                    )
+                  )
                 );
                 dev = lib.concatStringsSep "," (
                   with tools;
