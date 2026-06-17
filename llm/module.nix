@@ -255,19 +255,14 @@ in
                 search = lib.concatStringsSep "," (
                   with tools;
                   (
-                    [
-                      time
-                    ]
-                    ++ (
-                      if config.jstos.system.webSearch.enable then
-                        [
-                          # The other tools are rarely if ever useful.
-                          "mcp__mcp-searxng__searxng_web_search"
-                          "mcp__mcp-searxng__web_url_read"
-                        ]
-                      else
-                        [ open-websearch ]
-                    )
+                    if config.jstos.system.webSearch.enable then
+                      [
+                        # The other tools are rarely if ever useful.
+                        "mcp__mcp-searxng__searxng_web_search"
+                        "mcp__mcp-searxng__web_url_read"
+                      ]
+                    else
+                      [ open-websearch ]
                   )
                 );
                 dev = lib.concatStringsSep "," (
