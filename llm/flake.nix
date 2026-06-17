@@ -3,18 +3,12 @@
     systems.url = "github:nix-systems/default";
 
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
-
-    mcp-servers-nix = {
-      url = "github:natsukium/mcp-servers-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
     {
       systems,
       nixpkgs,
-      mcp-servers-nix,
       ...
     }:
     let
@@ -39,7 +33,6 @@
         }:
         let
           system = config.nixpkgs.hostPlatform.system;
-          mcpServersNixPkgs = mcp-servers-nix.packages.${system};
           llmPkgs = packages.${system};
         in
         {
@@ -53,7 +46,7 @@
                   config.llm.mcpServers = {
                     time = {
                       settings = {
-                        command = lib.getExe mcpServersNixPkgs.mcp-server-time;
+                        command = lib.getExe pkgs.mcp-server-time;
                       };
                       tools = {
                         get_current_time.safe = lib.mkDefault true;
@@ -72,7 +65,7 @@
                     # in a directory containing sensitive data.
                     filesystem = {
                       settings = {
-                        command = lib.getExe mcpServersNixPkgs.mcp-server-filesystem;
+                        command = lib.getExe pkgs.mcp-server-filesystem;
                         args = [ "." ];
                       };
                       tools = {
@@ -94,7 +87,7 @@
 
                     git = {
                       settings = {
-                        command = lib.getExe mcpServersNixPkgs.mcp-server-git;
+                        command = lib.getExe pkgs.mcp-server-git;
                       };
                       tools = {
                         "git_status".safe = lib.mkDefault true;

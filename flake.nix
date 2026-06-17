@@ -2,16 +2,12 @@
   description = "An opinionated Linux distribution built in NixOS";
 
   inputs = {
-    # Adding subflake inputs here is a workaround for <https://github.com/NixOS/nix/issues/15928>.
-    mcp-servers-nix = {
-      url = "github:natsukium/mcp-servers-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # Note,
+    # add subflake inputs here is a workaround for <https://github.com/NixOS/nix/issues/15928>.
     llm = {
       url = "path:./llm";
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
-      inputs.mcp-servers-nix.follows = "mcp-servers-nix";
     };
 
     systems.url = "github:nix-systems/default";
