@@ -114,6 +114,15 @@
                   };
                 };
 
+                fetch = {
+                  settings = {
+                    command = lib.getExe pkgs.mcp-server-fetch;
+                    args = [ "--ignore-robots-txt" ];
+                  };
+                  tools = {
+                    fetch.safe = lib.mkDefault true;
+                  };
+                };
               }
               // (
                 if config.jstos.system.webSearch.enable then
@@ -143,7 +152,7 @@
                         env = {
                           MODE = "stdio";
                           SEARCH_MODE = "request"; # We don't install Playwright for the `playwright` mode.
-                          DEFAULT_SEARCH_ENGINE = "startpage";
+                          DEFAULT_SEARCH_ENGINE = lib.mkDefault "startpage";
                           ALLOWED_SEARCH_ENGINES = lib.concatStringsSep "," [
                             # "bing" # Fails due to bot detection in `request` mode.
                             "baidu"

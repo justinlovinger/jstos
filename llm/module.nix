@@ -254,15 +254,16 @@ in
               // rec {
                 search = lib.concatStringsSep "," (
                   with tools;
-                  (
+                  # Getting web content for LLMs is non-trivial.
+                  # A dedicated URL fetching tool works better
+                  # than those bundled with search tools.
+                  [ fetch ]
+                  ++ (
                     if config.jstos.system.webSearch.enable then
-                      [
-                        # The other tools are rarely if ever useful.
-                        "mcp__mcp-searxng__searxng_web_search"
-                        "mcp__mcp-searxng__web_url_read"
-                      ]
+                      # The other tools are rarely if ever useful.
+                      [ "mcp__mcp-searxng__searxng_web_search" ]
                     else
-                      [ open-websearch ]
+                      [ "mcp__open-websearch__search" ]
                   )
                 );
                 dev = lib.concatStringsSep "," (
