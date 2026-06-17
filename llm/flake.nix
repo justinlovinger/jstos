@@ -116,7 +116,24 @@
 
                 fetch = {
                   settings = {
-                    command = lib.getExe pkgs.mcp-server-fetch;
+                    # As of 2026-06-17,
+                    # `mcp-server-fetch` doesn't include `nodejs`.
+                    command = lib.getExe (
+                      pkgs.mcp-server-fetch.overrideAttrs (
+                        {
+                          nativeBuildInputs ? [ ],
+                          postFixup ? "",
+                          ...
+                        }:
+                        {
+                          nativeBuildInputs = nativeBuildInputs ++ [ pkgs.makeWrapper ];
+                          postFixup = postFixup + ''
+                            wrapProgram $out/bin/mcp-server-fetch \
+                              --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.nodejs ]} \
+                          '';
+                        }
+                      )
+                    );
                     args = [ "--ignore-robots-txt" ];
                   };
                   tools = {
