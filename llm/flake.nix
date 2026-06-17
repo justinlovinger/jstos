@@ -127,7 +127,7 @@
               // (
                 if config.jstos.system.webSearch.enable then
                   {
-                    mcp-searxng = {
+                    searxng = {
                       settings = {
                         command = lib.getExe llmPkgs.mcp-searxng;
                         env = {
@@ -146,7 +146,7 @@
                   }
                 else
                   {
-                    open-websearch = {
+                    open_websearch = {
                       settings = {
                         command = lib.getExe llmPkgs.open-websearch;
                         env = {

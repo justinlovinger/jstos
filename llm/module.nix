@@ -261,9 +261,9 @@ in
                   ++ (
                     if config.jstos.system.webSearch.enable then
                       # The other tools are rarely if ever useful.
-                      [ "mcp__mcp-searxng__searxng_web_search" ]
+                      [ "mcp__searxng__searxng_web_search" ]
                     else
-                      [ "mcp__open-websearch__search" ]
+                      [ "mcp__open_websearch__search" ]
                   )
                 );
                 dev = lib.concatStringsSep "," (
