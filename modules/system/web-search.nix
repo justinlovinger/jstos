@@ -40,11 +40,20 @@ in
         port = lib.mkDefault "8888";
       };
 
-      settings.ui = {
-        theme_args.simple_style = lib.mkDefault "black";
-        hotkeys = lib.mkDefault "vim";
-      };
+      # Some engines,
+      # such as Google,
+      # perform very poorly
+      # when the language is set to anything other than `en-US`
+      # or `all`.
+      settings.search.default_lang = lib.mkDefault "all";
 
+      settings = {
+        general.enable_metrics = lib.mkDefault false;
+        ui = {
+          theme_args.simple_style = lib.mkDefault "black";
+          hotkeys = lib.mkDefault "vim";
+        };
+      };
     };
   };
 }
