@@ -112,7 +112,8 @@ in
             remoteCfg = config.terminal.remote;
           in
           lib.mkIf (remoteCfg.client.enable && remoteCfg.client.binding != null) {
-            ${remoteCfg.client.binding}.normal.command = "spawn '${moshWindow} ${remoteCfg.address}'";
+            ${remoteCfg.client.binding}.normal.command =
+              "spawn '${lib.getExe moshWindow} ${remoteCfg.address}'";
           };
       }
     )
