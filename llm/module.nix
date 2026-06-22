@@ -181,7 +181,7 @@ in
     let
       cfg = jstos.llm;
     in
-    {
+    lib.mkIf cfg.enable {
       programs.aichat = {
         enable = true;
 
