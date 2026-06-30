@@ -40,30 +40,30 @@ in
             default = pkgs.writeScript "toggle-display.sh" ''
               #!${lib.getExe pkgs.nushell}
               if (${lib.getExe pkgs.way-displays} -y -g | from yaml | get STATE | get HEADS | where NAME == ${cfg.name} | get 0 | get CURRENT | get ENABLED) {
-                ${lib.getExe pkgs.way-displays} -s DISABLED ${cfg.name}
+                try { ${lib.getExe pkgs.way-displays} -s DISABLED "!^${cfg.name}$" }
                 ${
                   if cfg.disableTouch.enable then
-                    "${lib.getExe' pkgs.river-classic "riverctl"} input ${cfg.disableTouch.input} events disabled"
+                    "try { ${lib.getExe' pkgs.river-classic "riverctl"} input ${cfg.disableTouch.input} events disabled }"
                   else
                     ""
                 }
                 ${
                   if config.brightnessControl.adaptiveBrightness.enable then
-                    "${lib.getExe' pkgs.systemd "systemctl"} --user stop adaptive-brightness.service"
+                    "try { ${lib.getExe' pkgs.systemd "systemctl"} --user stop adaptive-brightness.service }"
                   else
                     ""
                 }
               } else {
-                ${lib.getExe pkgs.way-displays} -d DISABLED ${cfg.name}
+                try { ${lib.getExe pkgs.way-displays} -d DISABLED "!^${cfg.name}$" }
                 ${
                   if cfg.disableTouch.enable then
-                    "${lib.getExe' pkgs.river-classic "riverctl"} input ${cfg.disableTouch.input} events enabled"
+                    "try { ${lib.getExe' pkgs.river-classic "riverctl"} input ${cfg.disableTouch.input} events enabled }"
                   else
                     ""
                 }
                 ${
                   if config.brightnessControl.adaptiveBrightness.enable then
-                    "${lib.getExe' pkgs.systemd "systemctl"} --user start adaptive-brightness.service"
+                    "try { ${lib.getExe' pkgs.systemd "systemctl"} --user start adaptive-brightness.service }"
                   else
                     ""
                 }
