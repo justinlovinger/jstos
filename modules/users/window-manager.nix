@@ -799,6 +799,8 @@ in
             border-color-urgent = riverColor fg.red;
             border-width = 1;
 
+            rule-add.ssd = ""; # Use server-side decorations for all windows
+
             set-repeat = "50 300";
 
             hide-cursor.timeout = 4000;
