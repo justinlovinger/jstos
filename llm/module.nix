@@ -65,6 +65,21 @@ in
             };
           };
 
+          webSearch = lib.mkOption {
+            type = lib.types.enum [
+              "paid"
+              "system"
+              "direct"
+            ];
+            default = if config'.jstos.system.webSearch.enable then "system" else "direct";
+            defaultText = ''if config.jstos.system.webSearch.enable then "system" else "direct"'';
+            description = ''
+              Web search method to use.
+              `paid` requires `KAGI_SESSION_TOKEN` in `~/.config/aichat/.env`.
+              `system` requires `config.jstos.system.webSearch.enable = true`.
+            '';
+          };
+
           mcpServers = lib.mkOption {
             type = lib.types.attrsOf (
               lib.types.submodule (
@@ -126,6 +141,7 @@ in
               default = true;
               description = ''
                 Whether to enable OpenRouter.
+                Requires `OPENROUTER_API_KEY` in `~/.config/aichat/.env`.
               '';
             };
 
@@ -259,7 +275,9 @@ in
                   # than those bundled with search tools.
                   [ fetch ]
                   ++ (
-                    if config.jstos.system.webSearch.enable then
+                    if cfg.webSearch == "paid" then
+                      [ "mcp__kagi_ken_mcp__kagi_search_fetch" ]
+                    else if cfg.webSearch == "system" then
                       # The other tools are rarely if ever useful.
                       [ "mcp__searxng__searxng_web_search" ]
                     else
