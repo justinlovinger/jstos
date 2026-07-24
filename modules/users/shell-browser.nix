@@ -37,7 +37,10 @@ in
       ];
 
       xdg.configFile."chawan/config.toml".source = (pkgs.formats.toml { }).generate "config.toml" {
-        buffer.scripting = true;
+        buffer = {
+          scripting = "app";
+          cookie = true;
+        };
         display.color-mode = "true-color";
         # Note,
         # I could not get `cmd.buffer.CMD` working.
