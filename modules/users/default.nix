@@ -1,4 +1,7 @@
-{ ... }:
+{
+  lib,
+  ...
+}:
 {
   imports = [
     ./brightness-control
@@ -13,5 +16,24 @@
     ./shell-browser.nix
     ./terminal.nix
     ./window-manager.nix
+  ];
+
+  jstos.userModules = [
+    (
+      { config, ... }:
+      {
+        options.webSearch = lib.mkOption {
+          type = lib.types.enum [
+            "paid"
+            "system"
+            "direct"
+          ];
+          default = "system";
+          description = ''
+            Default web search method to use across the user.
+          '';
+        };
+      }
+    )
   ];
 }

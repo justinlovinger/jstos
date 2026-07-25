@@ -10,10 +10,10 @@ in
   options.jstos.system.webSearch = {
     enable = lib.mkOption {
       type = lib.types.bool;
-      default = config.jstos.enable && config.jstos.device.has.regularUsage;
-      defaultText = lib.literalExpression "config.jstos.enable && config.jstos.device.has.regularUsage";
+      default = false;
       description = ''
         Whether to enable a local web search engine.
+        This is typically enabled when a user needs it.
       '';
     };
   };

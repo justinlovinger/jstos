@@ -5,6 +5,8 @@
 }:
 let
   config' = config;
+
+  cfgs = map (jstos: jstos.shellBrowser) (builtins.attrValues config.jstos.users);
 in
 {
   jstos.userModules = [
@@ -20,10 +22,29 @@ in
               Whether to enable the shell browser.
             '';
           };
+
+          webSearch = lib.mkOption {
+            type = lib.types.enum [
+              "paid"
+              "system"
+              "direct"
+            ];
+            default = config.webSearch;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.webSearch";
+            description = ''
+              See `config.jstos.users.<name>.webSearch`.
+              `paid` requires signing in,
+              which may require a Session Link.
+            '';
+          };
         };
       }
     )
   ];
+
+  jstos.system.webSearch.enable = lib.mkIf (lib.any (
+    cfg: cfg.enable && cfg.webSearch == "system"
+  ) cfgs) true;
 
   home-manager.users = lib.mapAttrs (
     user: jstos:
@@ -39,6 +60,11 @@ in
             cookie = true;
           };
           display.color-mode = "true-color";
+          siteconf.kagi = lib.mkIf (cfg.webSearch == "paid") {
+            host = "(.*\.)?kagi\.com";
+            cookie = "save";
+            share-cookie-jar = "kagi.com";
+          };
           # Note,
           # I could not get `cmd.buffer.CMD` working.
           page = {
@@ -64,7 +90,9 @@ in
       programs.nushell.extraConfig =
         let
           searchUrl =
-            if config'.jstos.system.webSearch.enable then
+            if cfg.webSearch == "paid" then
+              "https://kagi.com/html/search?q="
+            else if cfg.webSearch == "system" then
               "${config'.services.searx.settings.server.base_url}/search?q="
             else
               "https://lite.duckduckgo.com/lite?kp=-1&kd=-1&q=";

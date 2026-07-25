@@ -71,12 +71,11 @@ in
               "system"
               "direct"
             ];
-            default = if config'.jstos.system.webSearch.enable then "system" else "direct";
-            defaultText = ''if config.jstos.system.webSearch.enable then "system" else "direct"'';
+            default = config.webSearch;
+            defaultText = lib.literalExpression "config.jstos.users.<name>.webSearch";
             description = ''
-              Web search method to use.
+              See `config.jstos.users.<name>.webSearch`.
               `paid` requires `KAGI_SESSION_TOKEN` in `~/.config/aichat/.env`.
-              `system` requires `config.jstos.system.webSearch.enable = true`.
             '';
           };
 
@@ -185,12 +184,17 @@ in
     )
   ];
 
-  services.ollama.enable = lib.any (cfg: cfg.enable && cfg.local.enable) cfgs;
+  services.ollama.enable = lib.mkIf (lib.any (cfg: cfg.enable && cfg.local.enable) cfgs) true;
 
-  services.searx.settings.search.formats = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) [
-    "html"
-    "json"
-  ];
+  jstos.system.webSearch.enable = lib.mkIf (lib.any (
+    cfg: cfg.enable && cfg.webSearch == "system"
+  ) cfgs) true;
+  services.searx.settings.search.formats =
+    lib.mkIf (lib.any (cfg: cfg.enable && cfg.webSearch == "system") cfgs)
+      [
+        "html"
+        "json"
+      ];
 
   home-manager.users = lib.mapAttrs (
     user: jstos:
