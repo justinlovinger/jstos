@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
@@ -32,34 +31,33 @@ in
       cfg = jstos.shellBrowser;
     in
     lib.mkIf cfg.enable {
-      home.packages = [
-        pkgs.chawan
-      ];
+      programs.chawan = {
+        enable = true;
+        settings = {
+          buffer = {
+            scripting = "app";
+            cookie = true;
+          };
+          display.color-mode = "true-color";
+          # Note,
+          # I could not get `cmd.buffer.CMD` working.
+          page = {
+            q = "";
+            Q = "() => quit()";
 
-      xdg.configFile."chawan/config.toml".source = (pkgs.formats.toml { }).generate "config.toml" {
-        buffer = {
-          scripting = "app";
-          cookie = true;
-        };
-        display.color-mode = "true-color";
-        # Note,
-        # I could not get `cmd.buffer.CMD` working.
-        page = {
-          q = "";
-          Q = "() => quit()";
+            h = "n => pager.scrollLeft(n)";
+            j = "n => pager.scrollDown(n)";
+            k = "n => pager.scrollUp(n)";
+            l = "n => pager.scrollRight(n)";
 
-          h = "n => pager.scrollLeft(n)";
-          j = "n => pager.scrollDown(n)";
-          k = "n => pager.scrollUp(n)";
-          l = "n => pager.scrollRight(n)";
+            u = "n => pager.halfPageUp(n)";
+            d = "n => pager.halfPageDown(n)";
 
-          u = "n => pager.halfPageUp(n)";
-          d = "n => pager.halfPageDown(n)";
-
-          H = "n => pager.cursorLeft(n)";
-          J = "n => pager.cursorDown(n)";
-          K = "n => pager.cursorUp(n)";
-          L = "n => pager.cursorRight(n)";
+            H = "n => pager.cursorLeft(n)";
+            J = "n => pager.cursorDown(n)";
+            K = "n => pager.cursorUp(n)";
+            L = "n => pager.cursorRight(n)";
+          };
         };
       };
 
@@ -78,5 +76,4 @@ in
         '';
     }
   ) config.jstos.users;
-
 }
