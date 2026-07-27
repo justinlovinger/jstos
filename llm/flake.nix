@@ -141,13 +141,17 @@
                           }
                         )
                       );
-                      args = [ "--ignore-robots-txt" ];
+                      args = [
+                        "--ignore-robots-txt"
+                        # The default user agent identifies the fetcher as a bot,
+                        # which can result in it getting blocked.
+                        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+                      ];
                     };
                     tools = {
                       fetch.safe = lib.mkDefault true;
                     };
                   };
-
                 }
                 // (
                   if cfg.webSearch == "paid" then
