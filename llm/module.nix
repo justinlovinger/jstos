@@ -280,12 +280,11 @@ in
                   [ fetch ]
                   ++ (
                     if cfg.webSearch == "paid" then
-                      [ "mcp__kagi_ken_mcp__kagi_search_fetch" ]
+                      [ "mcp__kagi__kagi_search_fetch" ]
                     else if cfg.webSearch == "system" then
-                      # The other tools are rarely if ever useful.
                       [ "mcp__searxng__searxng_web_search" ]
                     else
-                      [ "mcp__open_websearch__search" ]
+                      [ "mcp__websearch__search" ]
                   )
                 );
                 dev = lib.concatStringsSep "," (

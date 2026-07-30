@@ -156,7 +156,7 @@
                 // (
                   if cfg.webSearch == "paid" then
                     {
-                      kagi_ken_mcp = {
+                      kagi = {
                         settings = {
                           command = lib.getExe llmPkgs.kagi-ken-mcp;
                         };
@@ -187,7 +187,7 @@
                     }
                   else
                     {
-                      open_websearch = {
+                      websearch = {
                         settings = {
                           command = lib.getExe llmPkgs.open-websearch;
                           env = {
