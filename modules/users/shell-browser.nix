@@ -50,6 +50,9 @@ in
     user: jstos:
     let
       cfg = jstos.shellBrowser;
+
+      kagiSearch = "https://kagi.com/html/search?q=";
+      searxngSearch = "${config'.services.searx.settings.server.base_url}/search?q=";
     in
     lib.mkIf cfg.enable {
       programs.chawan = {
@@ -65,6 +68,20 @@ in
             cookie = "save";
             share-cookie-jar = "kagi.com";
           };
+          omnirule =
+            let
+              searchTerms = ''encodeURIComponent(x.split(":").slice(1).join(":"))'';
+            in
+            {
+              kagi = lib.mkIf (jstos.webSearch == "paid") {
+                match = "^kg";
+                substitute-url = ''(x) => "${kagiSearch}" + ${searchTerms}'';
+              };
+              searxng = lib.mkIf config'.jstos.system.webSearch.enable {
+                name = "^sx";
+                substitute-url = ''(x) => "${searxngSearch}" + ${searchTerms}'';
+              };
+            };
           # Note,
           # I could not get `cmd.buffer.CMD` working.
           page = {
@@ -83,6 +100,16 @@ in
             J = "n => pager.cursorDown(n)";
             K = "n => pager.cursorUp(n)";
             L = "n => pager.cursorRight(n)";
+
+            # `C-k` is the keybinding for web search.
+            C-k = lib.mkDefault ''() => pager.load("${
+              if jstos.webSearch == "paid" then
+                "kg"
+              else if jstos.webSearch == "system" then
+                "sx"
+              else
+                "ddg"
+            }:")'';
           };
         };
       };
@@ -91,9 +118,9 @@ in
         let
           searchUrl =
             if cfg.webSearch == "paid" then
-              "https://kagi.com/html/search?q="
+              kagiSearch
             else if cfg.webSearch == "system" then
-              "${config'.services.searx.settings.server.base_url}/search?q="
+              searxngSearch
             else
               "https://lite.duckduckgo.com/lite?kp=-1&kd=-1&q=";
         in
