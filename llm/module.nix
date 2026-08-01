@@ -1,37 +1,15 @@
 {
   config,
+  jstos-llm,
   lib,
   pkgs,
   ...
 }:
 let
   config' = config;
+  llmPkgs = jstos-llm.pkgs;
 
   cfgs = map (jstos: jstos.llm) (builtins.attrValues config.jstos.users);
-
-  modelsOption = lib.mkOption {
-    type = lib.types.attrsOf (
-      lib.types.submodule (
-        { name, ... }:
-        {
-          freeformType = settingsFormat.type;
-          options.name = lib.mkOption {
-            type = lib.types.str;
-            default = name;
-            internal = true; # Hide from documentation.
-          };
-        }
-      )
-    );
-    default = { };
-    description = ''
-      Mapping of LLM model names to settings.
-      Settings are based on AIChat model settings.
-      `name` field in settings defaults to model name.
-    '';
-  };
-
-  settingsFormat = pkgs.formats.yaml { };
 in
 {
   jstos.userModules = [
@@ -45,24 +23,8 @@ in
             defaultText = lib.literalExpression "config.jstos.users.<name>.enable && config.jstos.device.has.regularUsage";
             description = ''
               Whether to enable the LLM.
+              Requires `OPENROUTER_API_KEY` in `~/.config/goose/secrets.yaml`.
             '';
-          };
-
-          defaultModel = {
-            provider = lib.mkOption {
-              type = lib.types.str;
-              defaultText = "Based on enabled providers.";
-              description = ''
-                Provider of the default model.
-              '';
-            };
-            model = lib.mkOption {
-              type = lib.types.str;
-              defaultText = "Based on enabled providers.";
-              description = ''
-                Name of the default model.
-              '';
-            };
           };
 
           webSearch = lib.mkOption {
@@ -75,116 +37,13 @@ in
             defaultText = lib.literalExpression "config.jstos.users.<name>.webSearch";
             description = ''
               See `config.jstos.users.<name>.webSearch`.
-              `paid` requires `KAGI_SESSION_TOKEN` in `~/.config/aichat/.env`.
+              `paid` requires a Kagi Session Link token in `.kagi_session_token`.
             '';
-          };
-
-          mcpServers = lib.mkOption {
-            type = lib.types.attrsOf (
-              lib.types.submodule (
-                { name, ... }:
-                {
-                  options = {
-                    settings = lib.mkOption {
-                      inherit (settingsFormat) type;
-                      description = ''
-                        Settings for this MCP server,
-                        based on AIChat MCP server settings.
-                        Name defaults to name of this attribute.
-                      '';
-                    };
-                    tools = lib.mkOption {
-                      type = lib.types.attrsOf (
-                        lib.types.submodule (
-                          { ... }:
-                          {
-                            options = {
-                              safe = lib.mkOption {
-                                type = lib.types.bool;
-                                default = false;
-                                description = ''
-                                  Whether this tool can run without user intervention.
-                                '';
-                              };
-                            };
-                          }
-                        )
-                      );
-                      description = ''
-                        Tools exposed by this MCP server.
-                        Name should match the name of the tool.
-                      '';
-                    };
-                  };
-
-                  config = {
-                    settings.name = lib.mkDefault name;
-                  };
-                }
-              )
-            );
-            description = ''
-              MCP servers available to LLMs.
-              MCP servers provide tools.
-            '';
-          };
-
-          local = {
-            enable = lib.mkEnableOption "local models";
-            models = modelsOption;
-          };
-
-          openrouter = {
-            enable = lib.mkOption {
-              type = lib.types.bool;
-              default = true;
-              description = ''
-                Whether to enable OpenRouter.
-                Requires `OPENROUTER_API_KEY` in `~/.config/aichat/.env`.
-              '';
-            };
-
-            models = modelsOption;
-          };
-        };
-
-        config.llm = {
-          defaultModel = lib.mkIf config.llm.openrouter.enable {
-            provider = lib.mkDefault "openrouter";
-            model = lib.mkDefault "deepseek/deepseek-v4-flash";
-          };
-
-          openrouter.models = {
-            "deepseek/deepseek-v4-flash" = {
-              max_input_tokens = 1048576;
-              supports_reasoning = true;
-              supports_function_calling = true;
-              patch.body = {
-                reasoning.enabled = lib.mkDefault true;
-                models = [
-                  "deepseek/deepseek-v3.2"
-                ];
-              };
-            };
-            "deepseek/deepseek-v4-pro" = {
-              max_input_tokens = 1048576;
-              supports_reasoning = true;
-              supports_function_calling = true;
-              patch.body = {
-                reasoning.enabled = lib.mkDefault true;
-                models = [
-                  "deepseek/deepseek-v4-flash"
-                  "deepseek/deepseek-v3.2"
-                ];
-              };
-            };
           };
         };
       }
     )
   ];
-
-  services.ollama.enable = lib.mkIf (lib.any (cfg: cfg.enable && cfg.local.enable) cfgs) true;
 
   jstos.system.webSearch.enable = lib.mkIf (lib.any (
     cfg: cfg.enable && cfg.webSearch == "system"
@@ -201,135 +60,252 @@ in
     let
       cfg = jstos.llm;
     in
+    { lib, ... }:
     lib.mkIf cfg.enable {
-      programs.aichat = {
-        enable = true;
+      # In a future version,
+      # environment variables can go in the config.
+      home.packages = [
+        (pkgs.symlinkJoin {
+          name = "goose-cli-wrapped";
+          paths = [ pkgs.goose-cli ];
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          postBuild = ''
+            wrapProgram $out/bin/goose ${
+              builtins.concatStringsSep " " (
+                lib.mapAttrsToList
+                  (
+                    name: value:
+                    ''--set ${name} "${
+                      if builtins.isBool value then (if value then "true" else "false") else builtins.toString value
+                    }"''
+                  )
+                  {
+                    GOOSE_SHOW_FULL_OUTPUT = true; # Don't truncate tool args.
+                    GOOSE_DISABLE_SESSION_NAMING = true;
+                    GOOSE_CLI_SHOW_THINKING = 1;
+                    GOOSE_RANDOM_THINKING_MESSAGES = false;
+                    GOOSE_NO_CODE_TRUNCATION = true;
 
-        # Upstream does not support MCP yet.
-        # Rust packages do not support overriding source.
-        package = pkgs.rustPlatform.buildRustPackage {
-          pname = "aichat";
-          version = "0.30.0";
-
-          src = pkgs.fetchFromGitHub {
-            owner = "subpop";
-            repo = "aichat";
-            rev = "0892fbbc3ef7dc59c930555f224c75333000b646"; # add_mcp_support
-            hash = "sha256-zvHwFXJjLYmIlUzPtSvScdZmS74ovwtEyoYLLV46PWM=";
-          };
-
-          cargoHash = "sha256-Qb1Gl3BuswSYyFrXzVUrgr5jCJjvdv5WvRmWVZiwSs8=";
-
-          nativeBuildInputs = [
-            pkgs.pkg-config
-            pkgs.installShellFiles
-          ];
-
-          postInstall = ''
-            installShellCompletion ./scripts/completions/aichat.{bash,fish,zsh}
+                    GOOSE_CONTEXT_LIMIT = 1048576;
+                  }
+              )
+            }
           '';
+        })
+      ];
+      # Goose needs to write to its config file
+      # for some features.
+      home.activation.gooseConfig =
+        let
+          config = (pkgs.formats.yaml { }).generate "config.yaml" {
+            GOOSE_TELEMETRY_ENABLED = false;
 
-          nativeInstallCheckInputs = [
-            pkgs.versionCheckHook
-          ];
-          versionCheckProgramArg = "--version";
-          doInstallCheck = true;
-        };
+            # In a future version,
+            # we may be able to define more than one model.
+            GOOSE_PROVIDER = "openrouter";
+            GOOSE_MODEL = "deepseek/deepseek-v4-flash:nitro"; # `:nitro` is a hack to enable reasoning until we have a version of Goose supporting `OPENROUTER_PARAMETERS`.
+            OPENROUTER_PARAMETERS = {
+              reasoning.enabled = true;
+              models = [
+                "deepseek/deepseek-v3.2"
+              ];
+            };
 
-        settings =
-          let
-            toolName = server: tool: "mcp__${server}__${tool}";
-          in
-          {
-            model = "${
-              if cfg.defaultModel.provider == "local" then "ollama" else cfg.defaultModel.provider
-            }:${cfg.defaultModel.model}";
-
-            # Reducing randomness results in better correctness.
-            # Note that setting temperature to 0 can result in loops on thinking models.
-            temperature = lib.mkDefault 0;
-            top_p = lib.mkDefault 0;
-
-            save = lib.mkDefault false;
-            keybindings = lib.mkDefault "vi";
-            wrap = lib.mkDefault "no";
-
-            # By default,
-            # AIChat destroys context frequently.
-            compress_threshold = lib.mkDefault 0;
-
-            highlight = lib.mkDefault false;
-
-            function_calling = lib.mkDefault true;
-
-            mapping_tools =
-              let
-                tools = lib.mapAttrs (
-                  server:
-                  { tools, ... }:
-                  lib.concatStringsSep "," (map (tool: toolName server tool) (builtins.attrNames tools))
-                ) cfg.mcpServers;
-              in
-              tools
-              // rec {
-                search = lib.concatStringsSep "," (
-                  with tools;
-                  # Getting web content for LLMs is non-trivial.
-                  # A dedicated URL fetching tool works better
-                  # than those bundled with search tools.
-                  [ fetch ]
-                  ++ (
-                    if cfg.webSearch == "paid" then
-                      [ "mcp__kagi__kagi_search_fetch" ]
-                    else if cfg.webSearch == "system" then
-                      [ "mcp__searxng__searxng_web_search" ]
-                    else
-                      [ "mcp__websearch__search" ]
+            # If builtins are not listed,
+            # they will be enabled by default.
+            extensions = {
+              chatrecall = {
+                enabled = false;
+                type = "platform";
+                name = "chatrecall";
+                description = "Search past conversations and load session summaries for contextual memory";
+                display_name = "Chat Recall";
+                bundled = true;
+                available_tools = [ ];
+              };
+              summon = {
+                enabled = false;
+                type = "platform";
+                name = "summon";
+                description = "Load knowledge and delegate tasks to subagents";
+                display_name = "Summon";
+                bundled = true;
+                available_tools = [ ];
+              };
+              code_execution = {
+                enabled = false;
+                type = "platform";
+                name = "code_execution";
+                description = "Goose will make extension calls through code execution, saving tokens";
+                display_name = "Code Mode";
+                bundled = true;
+                available_tools = [ ];
+              };
+              developer = {
+                enabled = false;
+                type = "platform";
+                name = "developer";
+                description = "Write and edit files, and execute shell commands";
+                display_name = "Developer";
+                bundled = true;
+                available_tools = [ ];
+              };
+              tom = {
+                enabled = false;
+                type = "platform";
+                name = "tom";
+                description = "Inject custom context into every turn via GOOSE_MOIM_MESSAGE_TEXT and GOOSE_MOIM_MESSAGE_FILE environment variables";
+                display_name = "Top Of Mind";
+                bundled = true;
+                available_tools = [ ];
+              };
+              analyze = {
+                enabled = false;
+                type = "platform";
+                name = "analyze";
+                description = "Analyze code structure with tree-sitter = directory overviews, file details, symbol call graphs";
+                display_name = "Analyze";
+                bundled = true;
+                available_tools = [ ];
+              };
+              extensionmanager = {
+                enabled = false;
+                type = "platform";
+                name = "Extension Manager";
+                description = "Enable extension management tools for discovering, enabling, and disabling extensions";
+                display_name = "Extension Manager";
+                bundled = true;
+                available_tools = [ ];
+              };
+              apps = {
+                enabled = false;
+                type = "platform";
+                name = "apps";
+                description = "Create and manage custom Goose apps through chat. Apps are HTML/CSS/JavaScript and run in sandboxed windows.";
+                display_name = "Apps";
+                bundled = true;
+                available_tools = [ ];
+              };
+              todo = {
+                enabled = false;
+                type = "platform";
+                name = "todo";
+                description = "Enable a todo list for goose so it can keep track of what it is doing";
+                display_name = "Todo";
+                bundled = true;
+                available_tools = [ ];
+              };
+              summarize = {
+                enabled = false;
+                type = "platform";
+                name = "summarize";
+                description = "Load files/directories and get an LLM summary in a single call";
+                display_name = "Summarize";
+                bundled = true;
+                available_tools = [ ];
+              };
+            }
+            // {
+              fetch = {
+                enabled = true;
+                type = "stdio";
+                name = "fetch";
+                cmd = lib.getExe (
+                  pkgs.mcp-server-fetch.overrideAttrs (
+                    {
+                      nativeBuildInputs ? [ ],
+                      postFixup ? "",
+                      ...
+                    }:
+                    {
+                      nativeBuildInputs = nativeBuildInputs ++ [ pkgs.makeWrapper ];
+                      postFixup = postFixup + ''
+                        wrapProgram $out/bin/mcp-server-fetch \
+                          --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.nodejs ]} \
+                      '';
+                    }
                   )
                 );
-                dev = lib.concatStringsSep "," (
-                  with tools;
-                  [
-                    search
-                    shell
-                    filesystem
-                    git
-                  ]
-                );
+                args = [
+                  "--ignore-robots-txt"
+                  # The default user agent identifies the fetcher as a bot,
+                  # which can result in it getting blocked.
+                  "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+                ];
+                timeout = 30;
               };
-            use_tools = lib.mkDefault "search";
-
-            tool_call_permission = lib.mkDefault "ask";
-            verbose_tool_calls = lib.mkDefault true;
-            tool_permissions.allowed = lib.flatten (
-              lib.mapAttrsToList (
-                server:
-                { tools, ... }:
-                map (tool: toolName server tool) (
-                  builtins.attrNames (lib.filterAttrs (_: { safe, ... }: safe) tools)
-                )
-              ) cfg.mcpServers
+            }
+            // (
+              if cfg.webSearch == "paid" then
+                {
+                  kagi = {
+                    enabled = true;
+                    type = "stdio";
+                    name = "kagi";
+                    cmd = lib.getExe llmPkgs.kagi-ken-mcp;
+                    args = [ ];
+                    timeout = 15;
+                    available_tools = [ "kagi_search_fetch" ];
+                  };
+                }
+              else if cfg.webSearch == "system" then
+                {
+                  searxng = {
+                    enabled = true;
+                    type = "stdio";
+                    name = "searxng";
+                    cmd = lib.getExe llmPkgs.mcp-searxng;
+                    args = [ ];
+                    envs = {
+                      SEARXNG_URL = config'.services.searx.settings.server.base_url;
+                      SEARXNG_LITE_TOOLS = true; # LLMs tend to do better with smaller context and simpler tools.
+                      SEARXNG_MAX_RESULTS = 10; # This is what the LLM would usually ask for if it could.
+                    };
+                    timeout = 15;
+                    available_tools = [ "searxng_web_search" ];
+                  };
+                }
+              else
+                {
+                  websearch = {
+                    enabled = true;
+                    type = "stdio";
+                    name = "websearch";
+                    cmd = lib.getExe llmPkgs.open-websearch;
+                    args = [ ];
+                    envs = {
+                      MODE = "stdio";
+                      SEARCH_MODE = "request"; # We don't install Playwright for the `playwright` mode.
+                      DEFAULT_SEARCH_ENGINE = "startpage";
+                      ALLOWED_SEARCH_ENGINES = lib.concatStringsSep "," [
+                        # "bing" # Fails due to bot detection in `request` mode.
+                        "baidu"
+                        "csdn"
+                        "duckduckgo"
+                        # "exa" # Does not appear to be working.
+                        "brave" # Sometimes returns 429 Too Many Requests
+                        # "juejin" # This breaks the MCP server.
+                        "startpage"
+                        "sogou"
+                      ];
+                    };
+                    timeout = 15;
+                    available_tools = [ "search" ];
+                  };
+                }
             );
-
-            mcp_servers = map ({ settings, ... }: settings) (builtins.attrValues cfg.mcpServers);
-
-            clients = [
-              (lib.mkIf cfg.local.enable {
-                type = "openai-compatible";
-                name = "ollama";
-                api_base = "http://localhost:11434/v1";
-                models = builtins.attrValues cfg.local.models;
-              })
-
-              (lib.mkIf cfg.openrouter.enable {
-                type = "openai-compatible";
-                name = "openrouter";
-                api_base = "https://openrouter.ai/api/v1";
-                models = builtins.attrValues cfg.openrouter.models;
-              })
-            ];
           };
-      };
+        in
+        lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+          mkdir -p "$HOME/.config/goose"
+          cp -f ${config} "$HOME/.config/goose/config.yaml"
+        '';
+      # The default prompt is verbose and unnecessary.
+      xdg.configFile."goose/prompts/system.md".text = ''
+        {% if moim_system_prompt_block is defined %}
+        {{ moim_system_prompt_block }}
+        {% endif %}
+      '';
     }
   ) config.jstos.users;
 }

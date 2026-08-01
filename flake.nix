@@ -131,7 +131,7 @@
           in
           {
             _module.args.jstos = {
-              lib = lib;
+              inherit lib;
               pkgs = packages.${system};
             };
 
