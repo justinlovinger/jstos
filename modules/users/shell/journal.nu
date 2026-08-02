@@ -11,6 +11,7 @@ def je [ ] {
 def lje [
   --copy (-c)
   --path (-p)
+  --open (-o)
   --skip (-s): int = 0
   --take (-n): int = 1
   ...pattern: string
@@ -21,6 +22,8 @@ def lje [
     wl-copy -n ...$paths
   } else if $path {
     $paths | str join "\n"
+  } else if $open {
+    ^$env.EDITOR ...$paths
   } else if ($paths | is-not-empty) {
     $paths | showje
   }
