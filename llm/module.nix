@@ -103,11 +103,12 @@ in
             # In a future version,
             # we may be able to define more than one model.
             GOOSE_PROVIDER = "openrouter";
-            GOOSE_MODEL = "deepseek/deepseek-v4-flash:nitro"; # `:nitro` is a hack to enable reasoning until we have a version of Goose supporting `OPENROUTER_PARAMETERS`.
+            GOOSE_MODEL = "~deepseek/deepseek-v4-flash-latest";
             OPENROUTER_PARAMETERS = {
               reasoning.enabled = true;
               models = [
-                "deepseek/deepseek-v3.2"
+                "deepseek/deepseek-v4-flash-0731"
+                "deepseek/deepseek-v4-flash"
               ];
             };
 
