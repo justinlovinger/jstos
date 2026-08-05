@@ -1,0 +1,49 @@
+diff --git a/src/tools/search.js b/src/tools/search.js
+index 1250578..b393667 100644
+--- a/src/tools/search.js
++++ b/src/tools/search.js
+@@ -10,11 +10,8 @@ import { z } from "zod";
+  * Schema for search tool input validation
+  */
+ export const searchInputSchema = {
+-  queries: z.array(z.string()).min(1).describe(
+-    "One or more concise, keyword-focused search queries. Include essential context within each query for standalone use.",
+-  ),
+-  limit: z.number().int().min(1).max(50).optional().describe(
+-    "Maximum number of search results per query (default: 10, max: 50)",
++  query: z.string().describe(
++    "A concise, keyword-focused search query. Include essential context within the query for standalone use.",
+   ),
+ };
+ 
+@@ -23,11 +20,12 @@ export const searchInputSchema = {
+  * Mirrors the functionality of the official Kagi MCP kagi_search_fetch tool
+  *
+  * @param {Object} args - Tool arguments
+- * @param {Array<string>} args.queries - Array of search queries
+- * @param {number} [args.limit=10] - Maximum number of search results per query
++ * @param {string} args.query - Search query
+  * @returns {Promise<Object>} MCP tool response
+  */
+-export async function kagiSearchFetch({ queries, limit = 10 }) {
++export async function kagiSearchFetch({ query }) {
++  const queries = [query];
++  const limit = 10;
+   try {
+     if (!queries || queries.length === 0) {
+       throw new Error("Search called with no queries.");
+@@ -105,12 +103,7 @@ export async function kagiSearchFetch({ queries, limit = 10 }) {
+  * Tool registration configuration for MCP server
+  */
+ export const searchToolConfig = {
+-  name: "kagi_search_fetch",
+-  description: `
+-    Fetch web results based on one or more queries using the Kagi.com web search engine. Use for
+-    general search and when the user explicitly tells you to 'fetch' results/information. Results are
+-    from all queries given. They are numbered continuously, so that a user may be able to refer to a
+-    result by a specific number. Supports optional limit parameter to control results per query.
+-    `.replace(/\s+/gs, " ").trim(),
++  name: "search",
++  description: "Search the web.",
+   inputSchema: searchInputSchema,
+ };

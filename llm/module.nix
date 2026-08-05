@@ -243,10 +243,20 @@ in
                     enabled = true;
                     type = "stdio";
                     name = "kagi";
-                    cmd = lib.getExe llmPkgs.kagi-ken-mcp;
+                    cmd = lib.getExe (
+                      llmPkgs.kagi-ken-mcp.overrideAttrs (
+                        {
+                          patches ? [ ],
+                          ...
+                        }:
+                        {
+                          patches = patches ++ [ ./patches/kagi-ken-mcp/simplify-search.patch ];
+                        }
+                      )
+                    );
                     args = [ ];
                     timeout = 15;
-                    available_tools = [ "kagi_search_fetch" ];
+                    available_tools = [ "search" ];
                   };
                 }
               else if cfg.webSearch == "system" then
