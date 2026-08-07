@@ -10,6 +10,49 @@ let
   llmPkgs = jstos-llm.pkgs;
 
   cfgs = map (jstos: jstos.llm) (builtins.attrValues config.jstos.users);
+  users = builtins.attrNames (lib.filterAttrs (_: jstos: jstos.llm.enable) config.jstos.users);
+
+  containerName = user: "${user}-llm";
+  containerUser = "llm";
+
+  # In a future version,
+  # environment variables can go in the config.
+  goose = pkgs.symlinkJoin {
+    name = "goose-cli-wrapped";
+    paths = [ pkgs.goose-cli ];
+    nativeBuildInputs = [ pkgs.makeWrapper ];
+    postBuild = ''
+      wrapProgram $out/bin/goose ${
+        builtins.concatStringsSep " " (
+          lib.mapAttrsToList
+            (
+              name: value:
+              ''--set ${name} "${
+                if builtins.isBool value then (if value then "true" else "false") else builtins.toString value
+              }"''
+            )
+            {
+              GOOSE_SHOW_FULL_OUTPUT = true; # Don't truncate tool args.
+              GOOSE_DISABLE_SESSION_NAMING = true;
+              GOOSE_CLI_SHOW_THINKING = 1;
+              GOOSE_RANDOM_THINKING_MESSAGES = false;
+              GOOSE_NO_CODE_TRUNCATION = true;
+
+              # We may be able to remove these once Goose knows about the model.
+              GOOSE_CONTEXT_LIMIT = 1048576;
+              GOOSE_MAX_TOKENS = 1048576;
+            }
+        )
+      }
+    '';
+  };
+
+  imapAttrs' =
+    f: set:
+    let
+      names = builtins.attrNames set;
+    in
+    lib.listToAttrs (lib.imap0 (i: name: f i name set.${name}) names);
 in
 {
   jstos.userModules = [
@@ -24,6 +67,10 @@ in
             description = ''
               Whether to enable the LLM.
               Requires `OPENROUTER_API_KEY` in `~/.config/goose/secrets.yaml`.
+
+              Run the LLM using `goose`.
+              Pass files to and from the LLM using `~/llm`.
+              Access the LLM container manually using `machinectl shell ${containerUser}@${containerName "USER"}`.
             '';
           };
 
@@ -45,6 +92,135 @@ in
     )
   ];
 
+  containers = imapAttrs' (
+    i: user: jstos:
+    let
+      cfg = jstos.llm;
+      hostHome = config.users.users.${user}.home;
+      containerHome = "/home/${containerUser}";
+    in
+    lib.nameValuePair (containerName user) (
+      lib.mkIf cfg.enable {
+        autoStart = true;
+        ephemeral = true;
+
+        privateNetwork = true;
+        hostAddress = "10.231.${toString (136 + i)}.1";
+        localAddress = "10.231.${toString (136 + i)}.2";
+
+        bindMounts =
+          builtins.listToAttrs (
+            map
+              (
+                path:
+                lib.nameValuePair "${containerHome}/${path}" {
+                  hostPath = "${hostHome}/${path}";
+                  isReadOnly = false;
+                }
+              )
+              [
+                ".config/goose"
+                ".local/share/goose"
+                ".local/state/goose"
+                "llm"
+              ]
+          )
+          // (
+            if cfg.webSearch == "paid" then
+              {
+                "${containerHome}/.kagi_session_token" = {
+                  hostPath = "${hostHome}/.kagi_session_token";
+                  isReadOnly = true;
+                };
+              }
+            else
+              { }
+          );
+
+        config = {
+          # The bind mounts don't set the correct user for intermediary directories.
+          systemd.tmpfiles.rules = [
+            "d ${containerHome}/.config 0755 ${containerUser} users -"
+            "d ${containerHome}/.local 0755 ${containerUser} users -"
+            "d ${containerHome}/.local/share 0755 ${containerUser} users -"
+            "d ${containerHome}/.local/state 0755 ${containerUser} users -"
+          ];
+
+          # Containers don't have the same Nixpkgs as the host by default
+          # if using flakes.
+          nix.settings.experimental-features = "nix-command flakes";
+          nix.nixPath = [ "nixpkgs=${pkgs.path}" ];
+          nix.registry.nixpkgs.to = {
+            type = "path";
+            path = pkgs.path;
+          };
+
+          users.users.${containerUser} = {
+            isNormalUser = true;
+            home = containerHome;
+            uid = config.users.users.${user}.uid;
+          };
+
+          environment.systemPackages = [
+            goose
+          ]
+          ++ (with pkgs; [
+            git
+            jq
+          ]);
+
+          # The container is ephemeral.
+          # The only state is Goose,
+          # which shouldn't matter for this.
+          system.stateVersion = config.system.nixos.release;
+        };
+      }
+    )
+  ) config.jstos.users;
+  # Waiting for `network.target` isn't enough.
+  # Without this,
+  # the container needs to be restarted after the network is online.
+  systemd.services = builtins.listToAttrs (
+    map (
+      user:
+      lib.nameValuePair "container@${containerName user}" {
+        after = [ "network-online.target" ];
+        wants = [ "network-online.target" ];
+      }
+    ) users
+  );
+
+  networking.nat = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) {
+    enable = true;
+    internalInterfaces = map (user: "ve-${containerName user}") users;
+    # We leave off `externalInterface` to select it automatically.
+  };
+
+  # The container will fail if bind mount locations don't already exist.
+  systemd.tmpfiles.rules = lib.flatten (
+    map (user: [
+      "d ${config.users.users.${user}.home}/.config/goose 0755 ${user} users -"
+      "d ${config.users.users.${user}.home}/.local/share/goose 0755 ${user} users -"
+      "d ${config.users.users.${user}.home}/.local/state/goose 0755 ${user} users -"
+      "d ${config.users.users.${user}.home}/llm 0755 ${user} users -"
+    ]) users
+  );
+
+  security.polkit.extraConfig = lib.mkMerge (
+    map (user: ''
+      polkit.addRule(function(action, subject) {
+        if (
+          action.id == "org.freedesktop.machine1.shell"
+          && subject.user == "${user}"
+          && action.lookup("user") == "${containerUser}"
+          && action.lookup("machine") == "${containerName user}"
+        ) {
+          return polkit.Result.YES;
+        }
+      });
+    '') users
+  );
+
   jstos.system.webSearch.enable = lib.mkIf (lib.any (
     cfg: cfg.enable && cfg.webSearch == "system"
   ) cfgs) true;
@@ -62,36 +238,10 @@ in
     in
     { lib, ... }:
     lib.mkIf cfg.enable {
-      # In a future version,
-      # environment variables can go in the config.
       home.packages = [
-        (pkgs.symlinkJoin {
-          name = "goose-cli-wrapped";
-          paths = [ pkgs.goose-cli ];
-          nativeBuildInputs = [ pkgs.makeWrapper ];
-          postBuild = ''
-            wrapProgram $out/bin/goose ${
-              builtins.concatStringsSep " " (
-                lib.mapAttrsToList
-                  (
-                    name: value:
-                    ''--set ${name} "${
-                      if builtins.isBool value then (if value then "true" else "false") else builtins.toString value
-                    }"''
-                  )
-                  {
-                    GOOSE_SHOW_FULL_OUTPUT = true; # Don't truncate tool args.
-                    GOOSE_DISABLE_SESSION_NAMING = true;
-                    GOOSE_CLI_SHOW_THINKING = 1;
-                    GOOSE_RANDOM_THINKING_MESSAGES = false;
-                    GOOSE_NO_CODE_TRUNCATION = true;
-
-                    GOOSE_CONTEXT_LIMIT = 1048576;
-                  }
-              )
-            }
-          '';
-        })
+        (pkgs.writeShellScriptBin "goose" ''
+          machinectl --quiet shell ${containerUser}@${containerName user} ${lib.getExe pkgs.dash} -c 'cd ~/llm && exec ${lib.getExe' goose "goose"} "$@"' _ "$@"
+        '')
       ];
       # Goose needs to write to its config file
       # for some features.
@@ -112,60 +262,16 @@ in
               ];
             };
 
-            # If builtins are not listed,
-            # they will be enabled by default.
+            # Builtins not listed completely have default settings.
+            # If a builtin is enabled by default,
+            # it has to be listed completely to be disabled.
             extensions = {
-              chatrecall = {
+              apps = {
                 enabled = false;
                 type = "platform";
-                name = "chatrecall";
-                description = "Search past conversations and load session summaries for contextual memory";
-                display_name = "Chat Recall";
-                bundled = true;
-                available_tools = [ ];
-              };
-              summon = {
-                enabled = false;
-                type = "platform";
-                name = "summon";
-                description = "Load knowledge and delegate tasks to subagents";
-                display_name = "Summon";
-                bundled = true;
-                available_tools = [ ];
-              };
-              code_execution = {
-                enabled = false;
-                type = "platform";
-                name = "code_execution";
-                description = "Goose will make extension calls through code execution, saving tokens";
-                display_name = "Code Mode";
-                bundled = true;
-                available_tools = [ ];
-              };
-              developer = {
-                enabled = false;
-                type = "platform";
-                name = "developer";
-                description = "Write and edit files, and execute shell commands";
-                display_name = "Developer";
-                bundled = true;
-                available_tools = [ ];
-              };
-              tom = {
-                enabled = false;
-                type = "platform";
-                name = "tom";
-                description = "Inject custom context into every turn via GOOSE_MOIM_MESSAGE_TEXT and GOOSE_MOIM_MESSAGE_FILE environment variables";
-                display_name = "Top Of Mind";
-                bundled = true;
-                available_tools = [ ];
-              };
-              analyze = {
-                enabled = false;
-                type = "platform";
-                name = "analyze";
-                description = "Analyze code structure with tree-sitter = directory overviews, file details, symbol call graphs";
-                display_name = "Analyze";
+                name = "apps";
+                description = "Create and manage custom Goose apps through chat. Apps are HTML/CSS/JavaScript and run in sandboxed windows.";
+                display_name = "Apps";
                 bundled = true;
                 available_tools = [ ];
               };
@@ -178,30 +284,12 @@ in
                 bundled = true;
                 available_tools = [ ];
               };
-              apps = {
+              summon = {
                 enabled = false;
                 type = "platform";
-                name = "apps";
-                description = "Create and manage custom Goose apps through chat. Apps are HTML/CSS/JavaScript and run in sandboxed windows.";
-                display_name = "Apps";
-                bundled = true;
-                available_tools = [ ];
-              };
-              todo = {
-                enabled = false;
-                type = "platform";
-                name = "todo";
-                description = "Enable a todo list for goose so it can keep track of what it is doing";
-                display_name = "Todo";
-                bundled = true;
-                available_tools = [ ];
-              };
-              summarize = {
-                enabled = false;
-                type = "platform";
-                name = "summarize";
-                description = "Load files/directories and get an LLM summary in a single call";
-                display_name = "Summarize";
+                name = "summon";
+                description = "Load knowledge and delegate tasks to subagents";
+                display_name = "Summon";
                 bundled = true;
                 available_tools = [ ];
               };
