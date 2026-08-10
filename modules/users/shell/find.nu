@@ -12,17 +12,12 @@ def find_tagged_file [] {
 
 def find_tagged_file_view [] {
   let x = (_find_commandline_parts) 
-
-  let tmp = $"($env.XDG_RUNTIME_DIR)/tag-view/($x.dir | path expand | path split | skip 1 | str join "-" )"
-  mkdir $tmp
-  do { cd $x.dir; tag-view -d $tmp } | ignore
-
+  let tmp = do { cd $x.dir; tag-view }
   try {
     let file = (tag find $tmp | fzf --query $x.query)
     let file = ls -l -D $"($tmp)/($file)" | get 0 | $in.target | str replace $"($x.dir | path expand)/" ""
     commandline edit $"($x.pre_query)($file)"
   }
-
   rm -r $tmp
 }
 
