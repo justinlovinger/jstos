@@ -255,11 +255,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1770053637,
-        "narHash": "sha256-XnePR/yCzczsDXU2Wpu+gAeim7CJC+sJ3pAQ6o2KsTs=",
+        "lastModified": 1786650854,
+        "narHash": "sha256-pbknzP3SHlttsaNuwDFfey15Rl+DwduIJWhQUk1cW4E=",
         "owner": "justinlovinger",
         "repo": "tag",
-        "rev": "67204f789993288a648cf133399ebc596f8ba446",
+        "rev": "5f698a212dea7c30332cce894a344b179c11f865",
         "type": "github"
       },
       "original": {

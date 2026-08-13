@@ -12,13 +12,15 @@ def find_tagged_file [] {
 
 def find_tagged_file_view [] {
   let x = (_find_commandline_parts) 
-  let tmp = do { cd $x.dir; tag-view }
-  try {
-    let file = (tag find $tmp | fzf --query $x.query)
-    let file = ls -l -D $"($tmp)/($file)" | get 0 | $in.target | str replace $"($x.dir | path expand)/" ""
-    commandline edit $"($x.pre_query)($file)"
-  }
-  rm -r $tmp
+  let file = (
+    tag-view $x.dir -c nu -c $"tag find | fzf --query '($x.query)' | ls -l -D $in | get 0 | get target"
+      | str replace $"($x.dir | path expand)/" ""
+  )
+  commandline edit $"($x.pre_query)($file)"
+}
+
+def _find_tagged_file_view_inner [query: string] {
+  tag find | fzf --query $query | ls -l -D $in | get 0 | get target
 }
 
 def open_file [] {
