@@ -286,7 +286,7 @@ in
                   exec ${lib.getExe pkgs.sway-contrib.grimshot} \
                     save \
                     "$selected" \
-                    "${screenshotDir}/dated_$(${lib.getExe' pkgs.coreutils "date"} +"%Y_%m_%dt%H_%M_%S")-_.png"
+                    "${screenshotDir}/$(${lib.getExe' pkgs.coreutils "date"} +"%Y_%m_%dt%H_%M_%S").png"
                 fi
               '';
               screenshotDir = "${homeManagerConfig.home.homeDirectory}/pictures/screenshots";
