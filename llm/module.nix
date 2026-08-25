@@ -15,6 +15,9 @@ let
   containerName = user: "${user}-llm";
   containerUser = "llm";
 
+  goose-dev = pkgs.writeShellScriptBin "goose-dev" ''
+    exec ${lib.getExe' goose "goose"} session --with-builtin analyze,developer,todo,tom "$@"
+  '';
   # In a future version,
   # environment variables can go in the config.
   goose = pkgs.symlinkJoin {
@@ -163,6 +166,7 @@ in
 
           environment.systemPackages = [
             goose
+            goose-dev
           ]
           ++ (with pkgs; [
             git
@@ -238,11 +242,16 @@ in
     in
     { lib, ... }:
     lib.mkIf cfg.enable {
-      home.packages = [
-        (pkgs.writeShellScriptBin "goose" ''
-          machinectl --quiet shell ${containerUser}@${containerName user} ${lib.getExe pkgs.dash} -c 'cd ~/llm && exec ${lib.getExe' goose "goose"} "$@"' _ "$@"
-        '')
-      ];
+      home.packages =
+        let
+          containerWrap = cmd: ''
+            machinectl --quiet shell ${containerUser}@${containerName user} ${lib.getExe pkgs.dash} -c 'cd ~/llm && exec ${cmd} "$@"' _ "$@"
+          '';
+        in
+        [
+          (pkgs.writeShellScriptBin "goose" (containerWrap (lib.getExe' goose "goose")))
+          (pkgs.writeShellScriptBin "goose-dev" (containerWrap (lib.getExe' goose-dev "goose-dev")))
+        ];
       # Goose needs to write to its config file
       # for some features.
       home.activation.gooseConfig =
@@ -266,6 +275,15 @@ in
             # If a builtin is enabled by default,
             # it has to be listed completely to be disabled.
             extensions = {
+              analyze = {
+                enabled = false;
+                type = "platform";
+                name = "analyze";
+                description = "Analyze code structure with tree-sitter = directory overviews, file details, symbol call graphs";
+                display_name = "Analyze";
+                bundled = true;
+                available_tools = [ ];
+              };
               apps = {
                 enabled = false;
                 type = "platform";
@@ -275,12 +293,66 @@ in
                 bundled = true;
                 available_tools = [ ];
               };
+              chatrecall = {
+                enabled = false;
+                type = "platform";
+                name = "chatrecall";
+                description = "Search past conversations and load session summaries for contextual memory";
+                display_name = "Chat Recall";
+                bundled = true;
+                available_tools = [ ];
+              };
+              code_execution = {
+                enabled = false;
+                type = "platform";
+                name = "code_execution";
+                description = "Goose will make extension calls through code execution, saving tokens";
+                display_name = "Code Mode";
+                bundled = true;
+                available_tools = [ ];
+              };
+              developer = {
+                enabled = false;
+                type = "platform";
+                name = "developer";
+                description = "Write and edit files, and execute shell commands";
+                display_name = "Developer";
+                bundled = true;
+                available_tools = [ ];
+              };
               extensionmanager = {
                 enabled = false;
                 type = "platform";
                 name = "Extension Manager";
                 description = "Enable extension management tools for discovering, enabling, and disabling extensions";
                 display_name = "Extension Manager";
+                bundled = true;
+                available_tools = [ ];
+              };
+              todo = {
+                enabled = false;
+                type = "platform";
+                name = "todo";
+                description = "Enable a todo list for goose so it can keep track of what it is doing";
+                display_name = "Todo";
+                bundled = true;
+                available_tools = [ ];
+              };
+              tom = {
+                enabled = false;
+                type = "platform";
+                name = "tom";
+                description = "Inject custom context into every turn via GOOSE_MOIM_MESSAGE_TEXT and GOOSE_MOIM_MESSAGE_FILE environment variables";
+                display_name = "Top Of Mind";
+                bundled = true;
+                available_tools = [ ];
+              };
+              summarize = {
+                enabled = false;
+                type = "platform";
+                name = "summarize";
+                description = "Load files/directories and get an LLM summary in a single call";
+                display_name = "Summarize";
                 bundled = true;
                 available_tools = [ ];
               };
