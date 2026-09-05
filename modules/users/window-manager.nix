@@ -616,6 +616,10 @@ in
           border-color = fg.normal;
           progress-color = bg.faded;
           layer = "overlay";
+
+          # Icons break Mako,
+          # see <https://github.com/emersion/mako/issues/629>.
+          icons = false;
         };
       };
 
