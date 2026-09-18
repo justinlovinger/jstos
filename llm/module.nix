@@ -262,7 +262,7 @@ in
             # In a future version,
             # we may be able to define more than one model.
             GOOSE_PROVIDER = "openrouter";
-            GOOSE_MODEL = "~deepseek/deepseek-v4-flash-latest";
+            GOOSE_MODEL = "deepseek/deepseek-v4.1-flash";
             OPENROUTER_PARAMETERS = {
               reasoning.enabled = true;
               models = [
