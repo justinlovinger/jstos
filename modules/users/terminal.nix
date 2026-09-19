@@ -21,9 +21,6 @@ let
     exec ${lib.getExe' mosh "mosh"} "$@" -- zellij
   '';
 
-  # Without a patch,
-  # Mosh ignores cursor shape
-  # in many situations.
   mosh = pkgs.mosh.overrideAttrs (
     {
       patches ? [ ],
@@ -31,9 +28,20 @@ let
     }:
     {
       patches = patches ++ [
+        # "Improve cursor style handling"
         (pkgs.fetchpatch {
           url = "https://github.com/matheusfillipe/mosh/commit/c7740d43fe616889aa89ac82a1dd631ef54193b5.patch";
           hash = "sha256-ratfcw8gvvwhTpjCSdHPznEDp/jpBtx0Xavbx03pTDg=";
+        })
+        # "Add support for ECMA-48 escape sequence for faint/half-bright"
+        (pkgs.fetchpatch {
+          url = "https://github.com/stanspas/mosh/commit/481d45d0f8e0e5ee63a39f950660b7305ff88d5e.patch";
+          hash = "sha256-12i8J7QJsHVg8l02RWmkbNB8pyaAw+GFEECd9RAuB3A=";
+        })
+        # "Add support for ECMA-48 escape sequence for crossed-out/strikethrough"
+        (pkgs.fetchpatch {
+          url = "https://github.com/stanspas/mosh/commit/a1cca0995b1cfba86eb6cf93db86d0c7c20850f8.patch";
+          hash = "sha256-UiAljJrm6EXgt18RPBh2kZbHUnyhzXPGHUsB9e6dy3k=";
         })
       ];
     }
