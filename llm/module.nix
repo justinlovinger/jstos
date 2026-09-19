@@ -10,7 +10,9 @@ let
   llmPkgs = jstos-llm.pkgs;
 
   cfgs = map (jstos: jstos.llm) (builtins.attrValues config.jstos.users);
-  users = builtins.attrNames (lib.filterAttrs (_: jstos: jstos.llm.enable) config.jstos.users);
+  enabledUsersList = builtins.attrNames (
+    lib.filterAttrs (_: jstos: jstos.llm.enable) config.jstos.users
+  );
 
   containerName = user: "${user}-llm";
   containerUser = "llm";
@@ -186,12 +188,12 @@ in
         after = [ "network-online.target" ];
         wants = [ "network-online.target" ];
       }
-    ) users
+    ) enabledUsersList
   );
 
   networking.nat = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) {
     enable = true;
-    internalInterfaces = map (user: "ve-${containerName user}") users;
+    internalInterfaces = map (user: "ve-${containerName user}") enabledUsersList;
     # We leave off `externalInterface` to select it automatically.
   };
 
@@ -202,7 +204,7 @@ in
       "d ${config.users.users.${user}.home}/.local/share/goose 0755 ${user} users -"
       "d ${config.users.users.${user}.home}/.local/state/goose 0755 ${user} users -"
       "d ${config.users.users.${user}.home}/llm 0755 ${user} users -"
-    ]) users
+    ]) enabledUsersList
   );
 
   security.polkit.enable = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) true;
@@ -218,7 +220,7 @@ in
           return polkit.Result.YES;
         }
       });
-    '') users
+    '') enabledUsersList
   );
 
   jstos.system.webSearch.enable = lib.mkIf (lib.any (
