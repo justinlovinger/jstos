@@ -166,16 +166,16 @@ in
 
                 cursor = "${bg.normal} ${fg.normal}";
 
-                regular0 = bg.normal;
-                regular1 = fg.faded;
-                regular2 = fg.faded;
-                regular3 = fg.faded;
-                regular4 = fg.faded;
-                regular5 = fg.faded;
-                regular6 = fg.faded;
-                regular7 = fg.normal;
+                regular0 = bg.normal; # black
+                regular1 = fg.faded; # red
+                regular2 = fg.faded; # green
+                regular3 = fg.faded; # yellow
+                regular4 = fg.faded; # blue
+                regular5 = fg.faded; # magenta
+                regular6 = fg.faded; # cyan
+                regular7 = fg.normal; # white
 
-                bright0 = fg.gray;
+                bright0 = bg.faded;
                 bright1 = fg.faded;
                 bright2 = fg.faded;
                 bright3 = fg.faded;
@@ -191,7 +191,7 @@ in
                 dim4 = bg.faded;
                 dim5 = bg.faded;
                 dim6 = bg.faded;
-                dim7 = bg.gray;
+                dim7 = fg.faded;
               }
               // lib.genAttrs (map builtins.toString (lib.lists.range 16 255)) (_: fg.faded);
           };
