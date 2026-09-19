@@ -2,8 +2,6 @@
   description = "An opinionated Linux distribution built in NixOS";
 
   inputs = {
-    # Note,
-    # add subflake inputs here is a workaround for <https://github.com/NixOS/nix/issues/15928>.
     llm = {
       url = "path:./llm";
       inputs.systems.follows = "systems";

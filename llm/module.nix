@@ -22,7 +22,7 @@ let
   # environment variables can go in the config.
   goose = pkgs.symlinkJoin {
     name = "goose-cli-wrapped";
-    paths = [ pkgs.goose-cli ];
+    paths = [ llmPkgs.goose-cli ];
     nativeBuildInputs = [ pkgs.makeWrapper ];
     postBuild = ''
       wrapProgram $out/bin/goose ${
@@ -35,15 +35,10 @@ let
               }"''
             )
             {
-              GOOSE_SHOW_FULL_OUTPUT = true; # Don't truncate tool args.
-              GOOSE_DISABLE_SESSION_NAMING = true;
-              GOOSE_CLI_SHOW_THINKING = 1;
-              GOOSE_RANDOM_THINKING_MESSAGES = false;
+              # As of writing,
+              # Goose won't read this option from the config,
+              # for some reason.
               GOOSE_NO_CODE_TRUNCATION = true;
-
-              # We may be able to remove these once Goose knows about the model.
-              GOOSE_CONTEXT_LIMIT = 1048576;
-              GOOSE_MAX_TOKENS = 1048576;
             }
         )
       }
@@ -257,12 +252,16 @@ in
       home.activation.gooseConfig =
         let
           config = (pkgs.formats.yaml { }).generate "config.yaml" {
-            GOOSE_TELEMETRY_ENABLED = false;
-
-            # In a future version,
-            # we may be able to define more than one model.
-            GOOSE_PROVIDER = "openrouter";
-            GOOSE_MODEL = "deepseek/deepseek-v4.1-flash";
+            active_provider = "openrouter";
+            providers = {
+              openrouter = {
+                enabled = true;
+                model = "deepseek/deepseek-v4.1-flash";
+                configured = true;
+              };
+            };
+            GOOSE_CONTEXT_LIMIT = 1048576;
+            GOOSE_MAX_TOKENS = 1048576;
             OPENROUTER_PARAMETERS = {
               reasoning.enabled = true;
               models = [
@@ -270,6 +269,13 @@ in
                 "deepseek/deepseek-v4-flash"
               ];
             };
+
+            GOOSE_TELEMETRY_ENABLED = false;
+
+            GOOSE_CLI_SHOW_THINKING = true;
+            GOOSE_DISABLE_SESSION_NAMING = true;
+            GOOSE_SHOW_FULL_OUTPUT = true; # Don't truncate tool args.
+            RANDOM_THINKING_MESSAGES = false; # The documentation erronously names this `GOOSE_RANDOM_THINKING_MESSAGES`.
 
             # Builtins not listed completely have default settings.
             # If a builtin is enabled by default,
@@ -279,10 +285,9 @@ in
                 enabled = false;
                 type = "platform";
                 name = "analyze";
-                description = "Analyze code structure with tree-sitter = directory overviews, file details, symbol call graphs";
+                description = "Analyze code structure with tree-sitter: directory overviews, file details, symbol call graphs";
                 display_name = "Analyze";
                 bundled = true;
-                available_tools = [ ];
               };
               apps = {
                 enabled = false;
@@ -291,7 +296,6 @@ in
                 description = "Create and manage custom Goose apps through chat. Apps are HTML/CSS/JavaScript and run in sandboxed windows.";
                 display_name = "Apps";
                 bundled = true;
-                available_tools = [ ];
               };
               chatrecall = {
                 enabled = false;
@@ -300,7 +304,6 @@ in
                 description = "Search past conversations and load session summaries for contextual memory";
                 display_name = "Chat Recall";
                 bundled = true;
-                available_tools = [ ];
               };
               code_execution = {
                 enabled = false;
@@ -309,7 +312,6 @@ in
                 description = "Goose will make extension calls through code execution, saving tokens";
                 display_name = "Code Mode";
                 bundled = true;
-                available_tools = [ ];
               };
               developer = {
                 enabled = false;
@@ -318,7 +320,6 @@ in
                 description = "Write and edit files, and execute shell commands";
                 display_name = "Developer";
                 bundled = true;
-                available_tools = [ ];
               };
               extensionmanager = {
                 enabled = false;
@@ -327,25 +328,14 @@ in
                 description = "Enable extension management tools for discovering, enabling, and disabling extensions";
                 display_name = "Extension Manager";
                 bundled = true;
-                available_tools = [ ];
               };
-              todo = {
+              orchestrator = {
                 enabled = false;
                 type = "platform";
-                name = "todo";
-                description = "Enable a todo list for goose so it can keep track of what it is doing";
-                display_name = "Todo";
+                name = "orchestrator";
+                description = "Manage agent sessions: list, view, start, send messages, interrupt, and stop agents";
+                display_name = "Orchestrator";
                 bundled = true;
-                available_tools = [ ];
-              };
-              tom = {
-                enabled = false;
-                type = "platform";
-                name = "tom";
-                description = "Inject custom context into every turn via GOOSE_MOIM_MESSAGE_TEXT and GOOSE_MOIM_MESSAGE_FILE environment variables";
-                display_name = "Top Of Mind";
-                bundled = true;
-                available_tools = [ ];
               };
               summarize = {
                 enabled = false;
@@ -354,7 +344,22 @@ in
                 description = "Load files/directories and get an LLM summary in a single call";
                 display_name = "Summarize";
                 bundled = true;
-                available_tools = [ ];
+              };
+              scheduler = {
+                enabled = false;
+                type = "platform";
+                name = "scheduler";
+                description = "Create and manage scheduled recipe execution";
+                display_name = "Scheduler";
+                bundled = true;
+              };
+              skills = {
+                enabled = false;
+                type = "platform";
+                name = "skills";
+                description = "Discover and provide skill instructions from filesystem and builtins";
+                display_name = "Skills";
+                bundled = true;
               };
               summon = {
                 enabled = false;
@@ -363,7 +368,22 @@ in
                 description = "Load knowledge and delegate tasks to subagents";
                 display_name = "Summon";
                 bundled = true;
-                available_tools = [ ];
+              };
+              todo = {
+                enabled = false;
+                type = "platform";
+                name = "todo";
+                description = "Enable a todo list for goose so it can keep track of what it is doing";
+                display_name = "Todo";
+                bundled = true;
+              };
+              tom = {
+                enabled = false;
+                type = "platform";
+                name = "tom";
+                description = "Inject custom context into every turn via GOOSE_MOIM_MESSAGE_TEXT and GOOSE_MOIM_MESSAGE_FILE environment variables";
+                display_name = "Top Of Mind";
+                bundled = true;
               };
             }
             // {
