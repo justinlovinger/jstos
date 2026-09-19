@@ -205,6 +205,7 @@ in
     ]) users
   );
 
+  security.polkit.enable = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) true;
   security.polkit.extraConfig = lib.mkMerge (
     map (user: ''
       polkit.addRule(function(action, subject) {
