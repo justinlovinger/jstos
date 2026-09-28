@@ -1,7 +1,4 @@
-{
-  pkgs,
-  ...
-}:
+pkgs:
 pkgs.buildNpmPackage rec {
   pname = "open-websearch";
   version = "2.1.9";

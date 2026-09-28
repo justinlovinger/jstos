@@ -89,12 +89,12 @@
       packages = eachSystem (system: overlays.default pkgs.${system} pkgs.${system});
 
       overlays.default =
-        pkgs: prev:
+        final: prev:
         let
-          system = pkgs.stdenv.hostPlatform.system;
+          system = final.stdenv.hostPlatform.system;
         in
         {
-          flow = pkgs.rustPlatform.buildRustPackage {
+          flow = final.rustPlatform.buildRustPackage {
             pname = "flow";
             version = "latest";
             src = inputs.flow;
@@ -124,13 +124,10 @@
         # JstOS core and general system and user configuration
         jstos =
           { pkgs, ... }:
-          let
-            system = pkgs.stdenv.hostPlatform.system;
-          in
           {
             _module.args.jstos = {
               inherit lib;
-              pkgs = packages.${system};
+              pkgs = overlays.default pkgs pkgs; # We want to use `pkgs` to reuse thunks.
             };
 
             imports = [

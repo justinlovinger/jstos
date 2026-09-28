@@ -1,7 +1,4 @@
-{
-  pkgs,
-  ...
-}:
+pkgs:
 pkgs.buildNpmPackage rec {
   pname = "kagi-ken-mcp";
   version = "1.3.0";

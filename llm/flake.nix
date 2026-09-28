@@ -33,13 +33,11 @@
       nixosModules.default =
         {
           config,
+          pkgs,
           ...
         }:
-        let
-          system = config.nixpkgs.hostPlatform.system;
-        in
         {
-          _module.args.jstos-llm.pkgs = packages.${system};
+          _module.args.jstos-llm.pkgs = overlays.default pkgs pkgs; # We want to use `pkgs` to reuse thunks.
 
           imports = [ ./module.nix ];
         };

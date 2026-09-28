@@ -1,7 +1,4 @@
-{
-  pkgs,
-  ...
-}:
+pkgs:
 pkgs.buildNpmPackage rec {
   pname = "mcp-searxng";
   version = "1.6.0";
