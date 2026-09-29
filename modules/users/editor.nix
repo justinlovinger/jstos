@@ -45,35 +45,34 @@ in
     in
     lib.mkMerge [
       (lib.mkIf cfg.enable {
-        home.packages = with pkgs; [
-          # We need Nix support without a development shell
-          # so we can write development shells.
-          nixfmt
-          nil
-
-          # Language servers for simple stable languages
-          # should be easily accessible
-          # without a development shell.
-          typos-lsp # Spellchecking
-          marksman # Markdown
-          taplo # Toml
-          texlab # LaTeX
-          vscode-langservers-extracted # Includes markup language servers, like JSON.
-          yaml-language-server
-        ];
-
         programs.helix = {
           enable = true;
 
           languages = {
             language-server = {
-              typos.command = "typos-lsp";
+              # We need Nix support without a development shell
+              # so we can write development shells,
+              # and language servers for simple stable languages
+              # should be easily accessible
+              # without a development shell.
+              nil.command = lib.getExe pkgs.nil; # Nix
+              marksman.command = lib.getExe pkgs.marksman; # Markdown
+              taplo.command = lib.getExe pkgs.taplo; # Toml
+              texlab.command = lib.getExe pkgs.texlab; # LaTeX
+              vscode-css-language-server.command = lib.getExe' pkgs.vscode-langservers-extracted "vscode-css-language-server";
+              vscode-eslint-language-server.command = lib.getExe' pkgs.vscode-langservers-extracted "vscode-eslint-language-server";
+              vscode-html-language-server.command = lib.getExe' pkgs.vscode-langservers-extracted "vscode-html-language-server";
+              vscode-json-language-server.command = lib.getExe' pkgs.vscode-langservers-extracted "vscode-json-language-server";
+              yaml-language-server.command = lib.getExe pkgs.yaml-language-server;
 
               rust-analyzer.config = {
                 assist.preferSelf = true;
                 cargo.features = "all";
                 check.command = "clippy";
               };
+
+              # Typos is a spellchecker.
+              typos.command = lib.getExe pkgs.typos-lsp;
             };
             language = [
               {
@@ -83,7 +82,7 @@ in
               {
                 name = "markdown";
                 formatter = {
-                  command = "${lib.getExe pkgs.deno}";
+                  command = lib.getExe pkgs.deno;
                   args = [
                     "fmt"
                     "--prose-wrap"
@@ -141,7 +140,7 @@ in
               }
               {
                 name = "nix";
-                formatter.command = "nixfmt";
+                formatter.command = lib.getExe pkgs.nixfmt;
                 auto-format = true;
               }
             ];
