@@ -14,6 +14,7 @@ let
     lib.filterAttrs (_: jstos: jstos.llm.enable) config.jstos.users
   );
 
+  containerHome = "/home/${containerUser}";
   containerName = user: "${user}-llm";
   containerUser = "llm";
 
@@ -97,7 +98,6 @@ in
     let
       cfg = jstos.llm;
       hostHome = config.users.users.${user}.home;
-      containerHome = "/home/${containerUser}";
     in
     lib.nameValuePair (containerName user) (
       lib.mkIf cfg.enable (
@@ -520,6 +520,10 @@ in
         {% if moim_system_prompt_block is defined %}
         {{ moim_system_prompt_block }}
         {% endif %}
+
+        You are in a sandbox. You may manipulate it freely, but you cannot access the users system. You may request files from the user. The user sees files in `${containerHome}/llm/`.
+
+        You are on NixOS with flakes enabled. Use Nix flakes to pin dependencies and `nix develop` to use pinned dependencies.
       '';
     }
   ) config.jstos.users;
