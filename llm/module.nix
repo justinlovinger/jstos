@@ -100,82 +100,103 @@ in
       containerHome = "/home/${containerUser}";
     in
     lib.nameValuePair (containerName user) (
-      lib.mkIf cfg.enable {
-        autoStart = true;
-        ephemeral = true;
+      lib.mkIf cfg.enable (
+        lib.mkMerge [
+          {
+            autoStart = true;
+            ephemeral = true;
 
-        privateNetwork = true;
-        hostAddress = "10.231.${toString (136 + i)}.1";
-        localAddress = "10.231.${toString (136 + i)}.2";
+            privateNetwork = true;
+            hostAddress = "10.231.${toString (136 + i)}.1";
+            localAddress = "10.231.${toString (136 + i)}.2";
 
-        bindMounts =
-          builtins.listToAttrs (
-            map
-              (
-                path:
-                lib.nameValuePair "${containerHome}/${path}" {
-                  hostPath = "${hostHome}/${path}";
-                  isReadOnly = false;
-                }
+            bindMounts =
+              builtins.listToAttrs (
+                map
+                  (
+                    path:
+                    lib.nameValuePair "${containerHome}/${path}" {
+                      hostPath = "${hostHome}/${path}";
+                      isReadOnly = false;
+                    }
+                  )
+                  [
+                    ".config/goose"
+                    ".local/share/goose"
+                    ".local/state/goose"
+                    "llm"
+                  ]
               )
-              [
-                ".config/goose"
-                ".local/share/goose"
-                ".local/state/goose"
-                "llm"
+              // (
+                if cfg.webSearch == "paid" then
+                  {
+                    "${containerHome}/.kagi_session_token" = {
+                      hostPath = "${hostHome}/.kagi_session_token";
+                      isReadOnly = true;
+                    };
+                  }
+                else
+                  { }
+              );
+
+            config = {
+              # The bind mounts don't set the correct user for intermediary directories.
+              systemd.tmpfiles.rules = [
+                "d ${containerHome}/.config 0755 ${containerUser} users -"
+                "d ${containerHome}/.local 0755 ${containerUser} users -"
+                "d ${containerHome}/.local/share 0755 ${containerUser} users -"
+                "d ${containerHome}/.local/state 0755 ${containerUser} users -"
+              ];
+
+              # Containers don't have the same Nixpkgs as the host by default
+              # if using flakes.
+              nix.settings.experimental-features = "nix-command flakes";
+              nix.nixPath = [ "nixpkgs=${pkgs.path}" ];
+              nix.registry.nixpkgs.to = {
+                type = "path";
+                path = pkgs.path;
+              };
+
+              users.users.${containerUser} = {
+                isNormalUser = true;
+                home = containerHome;
+                uid = config.users.users.${user}.uid;
+              };
+
+              environment.systemPackages = [
+                goose
+                goose-dev
               ]
-          )
-          // (
-            if cfg.webSearch == "paid" then
-              {
-                "${containerHome}/.kagi_session_token" = {
-                  hostPath = "${hostHome}/.kagi_session_token";
-                  isReadOnly = true;
+              ++ (with pkgs; [
+                git
+                jq
+              ]);
+
+              # The container is ephemeral.
+              # The only state is Goose,
+              # which shouldn't matter for this.
+              system.stateVersion = config.system.nixos.release;
+            };
+          }
+          (lib.mkIf jstos.editor.enable {
+            bindMounts = {
+              "${containerHome}/.config/helix" = {
+                hostPath = "${hostHome}/.config/helix";
+                isReadOnly = true;
+              };
+            };
+            config = {
+              environment = {
+                systemPackages = [ pkgs.helix ];
+                variables = lib.mkIf jstos.editor.default {
+                  EDITOR = "hx";
+                  VISUAL = "hx";
                 };
-              }
-            else
-              { }
-          );
-
-        config = {
-          # The bind mounts don't set the correct user for intermediary directories.
-          systemd.tmpfiles.rules = [
-            "d ${containerHome}/.config 0755 ${containerUser} users -"
-            "d ${containerHome}/.local 0755 ${containerUser} users -"
-            "d ${containerHome}/.local/share 0755 ${containerUser} users -"
-            "d ${containerHome}/.local/state 0755 ${containerUser} users -"
-          ];
-
-          # Containers don't have the same Nixpkgs as the host by default
-          # if using flakes.
-          nix.settings.experimental-features = "nix-command flakes";
-          nix.nixPath = [ "nixpkgs=${pkgs.path}" ];
-          nix.registry.nixpkgs.to = {
-            type = "path";
-            path = pkgs.path;
-          };
-
-          users.users.${containerUser} = {
-            isNormalUser = true;
-            home = containerHome;
-            uid = config.users.users.${user}.uid;
-          };
-
-          environment.systemPackages = [
-            goose
-            goose-dev
-          ]
-          ++ (with pkgs; [
-            git
-            jq
-          ]);
-
-          # The container is ephemeral.
-          # The only state is Goose,
-          # which shouldn't matter for this.
-          system.stateVersion = config.system.nixos.release;
-        };
-      }
+              };
+            };
+          })
+        ]
+      )
     )
   ) config.jstos.users;
   # Waiting for `network.target` isn't enough.
@@ -243,7 +264,7 @@ in
       home.packages =
         let
           containerWrap = cmd: ''
-            machinectl --quiet shell ${containerUser}@${containerName user} ${lib.getExe pkgs.dash} -c 'cd ~/llm && exec ${cmd} "$@"' _ "$@"
+            machinectl --quiet shell ${containerUser}@${containerName user} ${lib.getExe pkgs.dash} -l -c 'cd ~/llm && exec ${cmd} "$@"' _ "$@"
           '';
         in
         [
