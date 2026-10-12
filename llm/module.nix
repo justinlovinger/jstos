@@ -491,7 +491,7 @@ in
                     envs = {
                       MODE = "stdio";
                       SEARCH_MODE = "request"; # We don't install Playwright for the `playwright` mode.
-                      DEFAULT_SEARCH_ENGINE = "startpage";
+                      DEFAULT_SEARCH_ENGINE = "duckduckgo";
                       ALLOWED_SEARCH_ENGINES = lib.concatStringsSep "," [
                         # "bing" # Fails due to bot detection in `request` mode.
                         "baidu"
