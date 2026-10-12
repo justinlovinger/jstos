@@ -101,7 +101,9 @@
         "nixpkgs": [
           "nixpkgs"
         ],
-        "nixpkgs-unstable": "nixpkgs-unstable",
+        "nixpkgs-unstable": [
+          "nixpkgs-unstable"
+        ],
         "systems": [
           "systems"
         ]
@@ -220,6 +222,7 @@
         "mime-db": "mime-db",
         "naersk": "naersk",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-unstable": "nixpkgs-unstable",
         "owm": "owm",
         "systems": "systems",
         "tag": "tag",

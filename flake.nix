@@ -2,11 +2,15 @@
   description = "An opinionated Linux distribution built in NixOS";
 
   inputs = {
+    # Note,
+    # add subflake inputs here is a workaround for <https://github.com/NixOS/nix/issues/15928>.
     llm = {
       url = "path:./llm";
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
     };
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     systems.url = "github:nix-systems/default";
 
