@@ -86,6 +86,7 @@ in
             description = ''
               See `config.jstos.users.<name>.webSearch`.
               `paid` requires a Kagi Session Link token in `.kagi_session_token`.
+              `system` relaxes network security in the container.
             '';
           };
         };
@@ -106,7 +107,7 @@ in
             autoStart = true;
             ephemeral = true;
 
-            privateNetwork = true;
+            privateNetwork = cfg.webSearch != "system"; # The container can't reach the systems search engine if using a private network.
             hostAddress = "10.231.${toString (136 + i)}.1";
             localAddress = "10.231.${toString (136 + i)}.2";
 
@@ -473,8 +474,8 @@ in
                     args = [ ];
                     envs = {
                       SEARXNG_URL = config'.services.searx.settings.server.base_url;
-                      SEARXNG_LITE_TOOLS = true; # LLMs tend to do better with smaller context and simpler tools.
-                      SEARXNG_MAX_RESULTS = 10; # This is what the LLM would usually ask for if it could.
+                      SEARXNG_LITE_TOOLS = "true"; # LLMs tend to do better with smaller context and simpler tools.
+                      SEARXNG_MAX_RESULTS = "10"; # This is what the LLM would usually ask for if it could.
                     };
                     timeout = 15;
                     available_tools = [ "searxng_web_search" ];
