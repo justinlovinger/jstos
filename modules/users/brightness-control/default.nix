@@ -74,8 +74,8 @@ lib.mkMerge [
     # Brillo can change brightness
     # with a given minimum brightness,
     # defaulting to 1%,
-    # so we don't need to change brightness on boot.
-    boot.systemd.clampBacklight = lib.mkDefault false;
+    # so we don't need to clamp brightness on boot.
+    services.udev.extraRules = ''ENV{ID_BACKLIGHT_CLAMP}="0"'';
 
     hardware.sensor.iio.enable = lib.mkIf (builtins.any (cfg: cfg.adaptiveBrightness.enable) cfgs) true;
     home-manager.users = lib.mapAttrs (
