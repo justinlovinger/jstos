@@ -846,33 +846,7 @@ in
 
             xcursor-theme = "Bibata-Original-Classic";
           }
-          // (if cfg.swapCapsEsc then { keyboard-layout = "-options caps:swapescape us"; } else { })
-          // (
-            # `way-displays` can detect lid closing and opening,
-            # but it only disables the display
-            # if another monitor is plugged in.
-            if config.devices.display.laptop.name == null then
-              { }
-            else
-              {
-                map-switch = builtins.listToAttrs (
-                  map
-                    (mode: {
-                      name = mode;
-                      value = {
-                        "lid close" =
-                          "spawn '${lib.getExe pkgs.way-displays} -s DISABLED ${config.devices.display.laptop.name}'";
-                        "lid open" =
-                          "spawn '${lib.getExe pkgs.way-displays} -d DISABLED ${config.devices.display.laptop.name}'";
-                      };
-                    })
-                    [
-                      "normal"
-                      "locked"
-                    ]
-                );
-              }
-          );
+          // (if cfg.swapCapsEsc then { keyboard-layout = "-options caps:swapescape us"; } else { });
 
         extraConfig =
           let
