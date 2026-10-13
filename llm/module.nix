@@ -70,8 +70,12 @@ in
               Requires `OPENROUTER_API_KEY` in `~/.config/goose/secrets.yaml`.
 
               Run the LLM using `goose`.
+              Run the LLM with development tools enabled using `goose-dev`.
               Pass files to and from the LLM using `~/llm`.
               Access the LLM container manually using `machinectl shell ${containerUser}@${containerName "USER"}`.
+
+              If you run into permission denied errors,
+              you may need to set `users.users.<name>.uid`.
             '';
           };
 
