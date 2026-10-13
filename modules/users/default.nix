@@ -28,7 +28,7 @@
             "system"
             "direct"
           ];
-          default = "system";
+          default = "direct";
           description = ''
             Default web search method to use across the user.
           '';
