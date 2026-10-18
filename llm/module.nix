@@ -285,7 +285,7 @@ in
             providers = {
               openrouter = {
                 enabled = true;
-                model = "deepseek/deepseek-v4.1-flash";
+                model = "deepseek/deepseek-v4.1-flash-1017";
                 configured = true;
               };
             };
@@ -294,6 +294,7 @@ in
             OPENROUTER_PARAMETERS = {
               reasoning.enabled = true;
               models = [
+                "deepseek/deepseek-v4.1-flash"
                 "deepseek/deepseek-v4-flash-0731"
                 "deepseek/deepseek-v4-flash"
               ];
