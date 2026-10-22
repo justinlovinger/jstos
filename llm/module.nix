@@ -15,6 +15,7 @@ let
   );
 
   containerHomeBindMounts = [
+    ".agents"
     ".config/goose"
     ".local/share/goose"
     ".local/state/goose"
