@@ -522,6 +522,7 @@ in
           cp -f ${config} "$HOME/.config/goose/config.yaml"
         '';
       # The default prompt is verbose and unnecessary.
+      # The block about extensions is needed to discover Skills.
       xdg.configFile."goose/prompts/system.md".text = ''
         {% if moim_system_prompt_block is defined %}
         {{ moim_system_prompt_block }}
@@ -530,6 +531,26 @@ in
         You are in a sandbox. You may manipulate it freely, but you cannot access the users system. You may request files from the user. The user sees files in `${containerHome}/llm/`.
 
         You are on NixOS with flakes enabled. Use Nix flakes to pin dependencies and `nix develop` to use pinned dependencies.
+
+        {% if include_extensions and not code_execution_mode %}
+        # Extensions
+
+        {% if (extensions is defined) and extensions %}
+        The currently active extensions are below.
+        {% for extension in extensions %}
+
+        ## {{extension.name}}
+
+        {% if extension.has_resources %}
+        {{extension.name}} supports resources.
+        {% endif %}
+        {% if extension.instructions %}### Instructions
+        {{extension.instructions}}{% endif %}
+        {% endfor %}
+        {% else %}
+        No extensions are defined.
+        {% endif %}
+        {% endif %}
       '';
     }
   ) config.jstos.users;
