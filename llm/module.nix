@@ -14,6 +14,12 @@ let
     lib.filterAttrs (_: jstos: jstos.llm.enable) config.jstos.users
   );
 
+  containerHomeBindMounts = [
+    ".config/goose"
+    ".local/share/goose"
+    ".local/state/goose"
+    "llm"
+  ];
   containerHome = "/home/${containerUser}";
   containerName = user: "${user}-llm";
   containerUser = "llm";
@@ -117,20 +123,13 @@ in
 
             bindMounts =
               builtins.listToAttrs (
-                map
-                  (
-                    path:
-                    lib.nameValuePair "${containerHome}/${path}" {
-                      hostPath = "${hostHome}/${path}";
-                      isReadOnly = false;
-                    }
-                  )
-                  [
-                    ".config/goose"
-                    ".local/share/goose"
-                    ".local/state/goose"
-                    "llm"
-                  ]
+                map (
+                  path:
+                  lib.nameValuePair "${containerHome}/${path}" {
+                    hostPath = "${hostHome}/${path}";
+                    isReadOnly = false;
+                  }
+                ) containerHomeBindMounts
               )
               // (
                 if cfg.webSearch == "paid" then
@@ -225,12 +224,12 @@ in
 
   # The container will fail if bind mount locations don't already exist.
   systemd.tmpfiles.rules = lib.flatten (
-    map (user: [
-      "d ${config.users.users.${user}.home}/.config/goose 0755 ${user} users -"
-      "d ${config.users.users.${user}.home}/.local/share/goose 0755 ${user} users -"
-      "d ${config.users.users.${user}.home}/.local/state/goose 0755 ${user} users -"
-      "d ${config.users.users.${user}.home}/llm 0755 ${user} users -"
-    ]) enabledUsersList
+    map (
+      user:
+      map (
+        path: "d ${config.users.users.${user}.home}/${path} 0755 ${user} users -"
+      ) containerHomeBindMounts
+    ) enabledUsersList
   );
 
   security.polkit.enable = lib.mkIf (lib.any (cfg: cfg.enable) cfgs) true;
