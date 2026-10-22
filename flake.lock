@@ -224,6 +224,7 @@
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "owm": "owm",
+        "simple-english": "simple-english",
         "systems": "systems",
         "tag": "tag",
         "wayland-pipewire-idle-inhibit": "wayland-pipewire-idle-inhibit",
@@ -244,6 +245,22 @@
         "owner": "rust-lang",
         "ref": "nightly",
         "repo": "rust-analyzer",
+        "type": "github"
+      }
+    },
+    "simple-english": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791214717,
+        "narHash": "sha256-p1ffLp/3Yg1yBfCikBwua3ieVBCNyZfTZH6GBAxNREA=",
+        "owner": "AminBlg",
+        "repo": "SimpleEnglish",
+        "rev": "a6fcb4fde098b33617cc1578d151ebf58774b883",
+        "type": "github"
+      },
+      "original": {
+        "owner": "AminBlg",
+        "repo": "SimpleEnglish",
         "type": "github"
       }
     },

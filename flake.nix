@@ -9,8 +9,13 @@
       inputs.systems.follows = "systems";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.nixpkgs-unstable.follows = "nixpkgs-unstable";
+      inputs.simple-english.follows = "simple-english";
     };
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    simple-english = {
+      url = "github:AminBlg/SimpleEnglish";
+      flake = false;
+    };
 
     systems.url = "github:nix-systems/default";
 

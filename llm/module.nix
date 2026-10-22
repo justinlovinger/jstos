@@ -276,6 +276,7 @@ in
           (pkgs.writeShellScriptBin "goose" (containerWrap (lib.getExe' goose "goose")))
           (pkgs.writeShellScriptBin "goose-dev" (containerWrap (lib.getExe' goose-dev "goose-dev")))
         ];
+
       # Goose needs to write to its config file
       # for some features.
       home.activation.gooseConfig =
@@ -521,8 +522,17 @@ in
           mkdir -p "$HOME/.config/goose"
           cp -f ${config} "$HOME/.config/goose/config.yaml"
         '';
+
+      # If we add skills from more than one package,
+      # we will need to merge their paths.
+      home.file.".agents/skills".source = jstos-llm.skills.simple-english;
+
       # The default prompt is verbose and unnecessary.
       # The block about extensions is needed to discover Skills.
+      # As of writing,
+      # Goose has no way to automatically load skills,
+      # so we instead inject skills we want to automatically load
+      # into the prompt.
       xdg.configFile."goose/prompts/system.md".text = ''
         {% if moim_system_prompt_block is defined %}
         {{ moim_system_prompt_block }}
@@ -551,6 +561,8 @@ in
         No extensions are defined.
         {% endif %}
         {% endif %}
+
+        ${builtins.readFile (jstos-llm.skills.simple-english + "/simple-english/SKILL.md")}
       '';
     }
   ) config.jstos.users;
